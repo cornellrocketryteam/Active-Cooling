@@ -3,12 +3,12 @@
  * Nissi Ragland (nkr33)
  * Cameron Goddard (csg83)
  * HARDWARE CONNECTIONS
- *   - GPIO 23 ---> PWM output to Fan 2
- *   - GPIO 24 ---> PWM output to Fan 1
  *   - GPIO 6 ---> I2C1 SDA
  *   - GPIO 7 ---> I2C1 SCL
  *   - GPIO 21 ---> I2C0 SCL
  *   - GPIO 22 ---> I2C0 SDA
+ *   - GPIO 23 ---> PWM output to Fan 2
+ *   - GPIO 24 ---> PWM output to Fan 1
  */
 #include <stdio.h>
 #include <stdlib.h>
