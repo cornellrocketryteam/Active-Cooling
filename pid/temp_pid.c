@@ -5,7 +5,10 @@
  * HARDWARE CONNECTIONS
  *   - GPIO 23 ---> PWM output to Fan 2
  *   - GPIO 24 ---> PWM output to Fan 1
- * 
+ *   - GPIO 6 ---> I2C1 SDA
+ *   - GPIO 7 ---> I2C1 SCL
+ *   - GPIO 21 ---> I2C0 SCL
+ *   - GPIO 22 ---> I2C0 SDA
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +47,16 @@ float measured_temp = 30;
 #define PWM_OUT_1 24
 #define PWM_OUT_2 23
 
+//Define I2C variables
+#define I2C_CHAN_0 i2c0
+#define I2C_CHAN_1 i2c1
+#define I2C0_SDA 22
+#define I2C0_SCL 21
+#define I2C1_SDA 6
+#define I2C1_SCL 7
 
+//temp variables that will be in driver - DELETE when integrated
+#define I2C_BAUD_RATE 400000
 // Variable to hold PWM slice number
 uint slice_num_1 ;
 uint slice_num_2 ;
@@ -100,9 +112,13 @@ int main() {
 
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
-    // i2c_init(I2C_CHAN, I2C_BAUD_RATE) ;
-    // gpio_set_function(SDA_PIN, GPIO_FUNC_I2C) ;
-    // gpio_set_function(SCL_PIN, GPIO_FUNC_I2C) ;
+    i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
+    gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
+    gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
+
+    i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
+    gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
+    gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
 
 
     ////////////////////////////////////////////////////////////////////////
