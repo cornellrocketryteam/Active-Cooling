@@ -31,6 +31,8 @@
 int proportional_gain = 100;
 int derivative_gain = 0;
 int integral_gain = 0;
+float desired_temp = 30;
+float measured_temp = 30;
 
 // PWM wrap value and clock divide value
 // For a CPU rate of 125 MHz, this gives
@@ -74,23 +76,10 @@ void on_pwm_wrap() {
         pwm_set_chan_level(slice_num, PWM_CHAN_A, control);
     }
     
-    // Read the IMU
-    // NOTE! This is in 15.16 fixed point. Accel in g's, gyro in deg/s
-    // If you want these values in floating point, call fix2float15() on
-    // the raw measurements.
-    mpu6050_read_raw(acceleration, gyro);
-    // NO SMALL ANGLE APPROXIMATION
-    //Filtering accelerometer data
-    filtered_az = filtered_az + ((acceleration[2]-filtered_az)>>4);
-    filtered_ay = filtered_ay + ((acceleration[1]-filtered_ay)>>4);
-    accel_angle = multfix15(float2fix15(atan2(-filtered_az, -filtered_ay) + M_PI), oneeightyoverpi);
-
-    // Gyro angle delta (measurement times timestep) (15.16 fixed point)
-    gyro_angle_delta = multfix15(gyro[0], zeropt001) ;
-
-    // Complementary angle (degrees - 15.16 fixed point)
-    complementary_angle = multfix15(complementary_angle - gyro_angle_delta, zeropt999) + multfix15(accel_angle, zeropt001);
-    error = desired_beam_angle - fix2float15(complementary_angle);
+    // Read the temp sensor
+    // 
+    
+    error = desired_temp - measured_temp;
     integral_error += error*dt;
     derivative_error = (error - prev_error)/dt;
     control = proportional_gain*error + integral_gain*integral_error + derivative_gain*derivative_error;
