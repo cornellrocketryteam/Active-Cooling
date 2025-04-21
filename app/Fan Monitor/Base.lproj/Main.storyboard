@@ -170,8 +170,11 @@
                             <constraint firstItem="PCy-lZ-SdW" firstAttribute="trailing" secondItem="0qd-fE-Wx8" secondAttribute="trailing" id="wCH-ve-UxK"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Thermal" largeTitleDisplayMode="always" id="e3q-7x-4Hj"/>
+                    <navigationItem key="navigationItem" title="Thermal" largeTitleDisplayMode="always" id="e3q-7x-4Hj">
+                        <barButtonItem key="rightBarButtonItem" image="ellipsis.circle" catalog="system" style="plain" id="gc5-fP-Vpp"/>
+                    </navigationItem>
                     <connections>
+                        <outlet property="settingsButton" destination="gc5-fP-Vpp" id="W4A-3O-LIZ"/>
                         <outlet property="tableView" destination="zqb-5R-Bxc" id="aXf-sl-Aiq"/>
                     </connections>
                 </viewController>
@@ -186,13 +189,40 @@
                     <view key="view" contentMode="scaleToFill" id="N3H-Sp-iHx">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="HKh-f3-1Iz">
+                                <rect key="frame" x="16" y="118" width="361" height="32"/>
+                                <segments>
+                                    <segment title="1m"/>
+                                    <segment title="15m"/>
+                                    <segment title="1h"/>
+                                    <segment title="All"/>
+                                </segments>
+                            </segmentedControl>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Or0-vk-Y98">
+                                <rect key="frame" x="0.0" y="157" width="393" height="250"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="250" id="YVC-ie-6hL"/>
+                                </constraints>
+                            </view>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="SB2-t5-lF3"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="HKh-f3-1Iz" firstAttribute="top" secondItem="SB2-t5-lF3" secondAttribute="top" id="PPj-zE-sf0"/>
+                            <constraint firstItem="Or0-vk-Y98" firstAttribute="trailing" secondItem="SB2-t5-lF3" secondAttribute="trailing" id="XNs-7V-I6l"/>
+                            <constraint firstItem="Or0-vk-Y98" firstAttribute="top" secondItem="HKh-f3-1Iz" secondAttribute="bottom" constant="8" symbolic="YES" id="Yza-Rg-oI9"/>
+                            <constraint firstItem="HKh-f3-1Iz" firstAttribute="leading" secondItem="SB2-t5-lF3" secondAttribute="leading" constant="16" id="dNr-mJ-sLK"/>
+                            <constraint firstItem="SB2-t5-lF3" firstAttribute="trailing" secondItem="HKh-f3-1Iz" secondAttribute="trailing" constant="16" id="pa9-fj-7Zl"/>
+                            <constraint firstItem="Or0-vk-Y98" firstAttribute="leading" secondItem="SB2-t5-lF3" secondAttribute="leading" id="s62-PK-c4C"/>
+                            <constraint firstItem="Or0-vk-Y98" firstAttribute="top" secondItem="HKh-f3-1Iz" secondAttribute="bottom" constant="8" symbolic="YES" id="ya5-FM-JUN"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3bW-2D-ToR" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3642" y="482"/>
+            <point key="canvasLocation" x="3641.9847328244273" y="481.69014084507046"/>
         </scene>
         <!--Tab Bar Controller-->
         <scene sceneID="151-pd-1bB">
@@ -234,6 +264,7 @@
     </scenes>
     <resources>
         <image name="chevron.forward" catalog="system" width="97" height="128"/>
+        <image name="ellipsis.circle" catalog="system" width="128" height="123"/>
         <image name="fan" catalog="system" width="128" height="116"/>
         <image name="thermometer.high" catalog="system" width="80" height="128"/>
         <image name="thermometer.sun" catalog="system" width="104" height="128"/>
