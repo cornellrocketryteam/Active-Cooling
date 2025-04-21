@@ -42,8 +42,10 @@ uint slice_num_2 ;
 volatile int control ;
 volatile int old_control ;
 
-
-
+//Serial input variables
+char serial_buffer[64];
+u_int8_t buffer_index;
+bool is_read;
 // PWM interrupt service routine
 void on_pwm_wrap() {
     // Clear the interrupt flag that brought us here
@@ -58,6 +60,33 @@ void on_pwm_wrap() {
     }
    
 }
+void process_serial(){
+    if(serial_buffer != nullptr){
+        int pwm_val = atoi(serial_buffer);
+        control = pwm_val;
+    }
+}
+void read_Serial(){
+    int c = getchar_timeout_us(0);
+    
+    while(c != PICO_ERROR_TIMEOUT){
+        if(!is_read){
+            is_read = true;
+            buffer_index = 0;
+        }
+        else if(buffer_index > 4){
+            is_read = false;
+            serial_buffer[buffer_index] = '\0';
+            buffer_index = 0;
+            process_serial();
+        }
+        else {
+            serial_buffer[buffer_index++] = c;
+        }
+        c = getchar_timeout_us(0);
+    }
+}
+
 int main() {
 
     // Initialize stdio
@@ -107,12 +136,5 @@ int main() {
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////////// ROCK AND ROLL ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
-    // // start core 1 
-    // multicore_reset_core1();
-    // multicore_launch_core1(core1_entry);
-
-    // // start core 0
-    // pt_add_thread(protothread_serial) ;
-    // pt_schedule_start ;
-
+    
 }
