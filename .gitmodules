@@ -1,0 +1,3 @@
+[submodule "lib/BME280-Pico"]
+	path = lib/BME280-Pico
+	url = git@github.com:cornellrocketryteam/BME280-Pico.git
