@@ -27,6 +27,14 @@ extension ThermalViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 150
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        if let detailVC = storyboard.instantiateViewController(withIdentifier: "ThermalDetailViewController") as? ThermalDetailViewController {
+            navigationController?.pushViewController(detailVC, animated: true)
+        }
+    }
+
 }
 
 extension ThermalViewController: UITableViewDataSource {
@@ -60,7 +68,12 @@ extension ThermalViewController: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ThermalCell", for: indexPath) as? ThermalTableViewCell else {
             return UITableViewCell()
         }
-        cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+        if (indexPath.row < 3) {
+            cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+        } else {
+            cell.titleLabel.text = "Thermal Camera"
+        }
+        
 
         return cell
     }
