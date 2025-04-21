@@ -31,13 +31,13 @@ class FillStationView: UIView {
         let boxSize = CGSize(width: 250, height: 250)
         let origin = CGPoint(
             x: (bounds.width - boxSize.width) / 2,
-            y: (bounds.height - boxSize.height) / 2 - 15
+            y: (bounds.height - boxSize.height) / 2
         )
         let fixedBoxFrame = CGRect(origin: origin, size: boxSize)
         boxLayer.path = UIBezierPath(roundedRect: fixedBoxFrame, cornerRadius: 16).cgPath
         boxLayer.strokeColor = UIColor.black.cgColor
         boxLayer.fillColor = UIColor.clear.cgColor
-        boxLayer.lineWidth = 3
+        boxLayer.lineWidth = 4
         layer.addSublayer(boxLayer)
 
 

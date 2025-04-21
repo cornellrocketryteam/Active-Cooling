@@ -7,9 +7,17 @@
 
 import UIKit
 
+enum UnitType {
+    case celsius, fahrenheit
+}
+
 class ThermalViewController: UIViewController {
 
+    @IBOutlet weak var settingsButton: UIBarButtonItem!
     @IBOutlet weak var tableView: UITableView!
+    
+    var selectedUnit: UnitType = .celsius
+    var thermalCameraOn = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +28,38 @@ class ThermalViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.dataSource = self
         tableView.delegate = self
+        
+        setupSettingsMenu()
+    }
+    
+    func setupSettingsMenu() {
+        let unitMenu = UIMenu(title: "", options: .displayInline, children: [
+            UIAction(title: "Celsius", image: UIImage(systemName: "degreesign.celsius"), state: selectedUnit == .celsius ? .on: .off) { _ in
+                self.selectedUnit = .celsius
+                self.setupSettingsMenu()
+            },
+            UIAction(title: "Fahrenheit", image: UIImage(systemName: "degreesign.fahrenheit"), state: selectedUnit == .fahrenheit ? .on: .off) { _ in
+                self.selectedUnit = .fahrenheit
+                self.setupSettingsMenu()
+            },
+        ])
+        
+        let separator = UIMenu(title: "", options: .displayInline, children: unitMenu.children)
+        
+        let thermalCameraMenu = UIMenu(title: "", options: .displayInline, children: [
+            UIAction(title: "Thermal Camera", image: UIImage(systemName: "camera"), state: thermalCameraOn == true ? .on : .off ) { _ in
+                self.thermalCameraOn.toggle()
+                self.setupSettingsMenu()
+            },
+        ])
+        
+        let menu = UIMenu(children: [
+            separator,
+            thermalCameraMenu
+        ])
+        
+        settingsButton.menu = menu
+        settingsButton.primaryAction = nil
     }
 }
 
@@ -27,6 +67,14 @@ extension ThermalViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 150
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        if let detailVC = storyboard.instantiateViewController(withIdentifier: "ThermalDetailViewController") as? ThermalDetailViewController {
+            navigationController?.pushViewController(detailVC, animated: true)
+        }
+    }
+
 }
 
 extension ThermalViewController: UITableViewDataSource {
@@ -60,7 +108,12 @@ extension ThermalViewController: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ThermalCell", for: indexPath) as? ThermalTableViewCell else {
             return UITableViewCell()
         }
-        cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+        if (indexPath.row < 3) {
+            cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+        } else {
+            cell.titleLabel.text = "Thermal Camera"
+        }
+        
 
         return cell
     }

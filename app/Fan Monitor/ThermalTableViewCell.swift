@@ -6,10 +6,14 @@
 //
 
 import UIKit
+import SwiftUI
 
 class ThermalTableViewCell: UITableViewCell {
 
     @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var chartContainerView: UIView!
+    
+    private var chartHost: UIHostingController<ChartWrapperView>?
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -19,6 +23,24 @@ class ThermalTableViewCell: UITableViewCell {
         
         contentView.backgroundColor = .white
         backgroundColor = .clear
+        
+        
+        let sampleData: [Double] = [42, 44, 43, 45, 46]
+        let chartView = ChartWrapperView(data: sampleData)
+        let hosting = UIHostingController(rootView: chartView)
+
+        chartHost = hosting
+        guard let hostView = hosting.view else { return }
+
+        hostView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(hostView)
+
+        NSLayoutConstraint.activate([
+            hostView.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
+            hostView.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),
+            hostView.trailingAnchor.constraint(equalTo: chartContainerView.trailingAnchor),
+            hostView.bottomAnchor.constraint(equalTo: chartContainerView.bottomAnchor)
+        ])
     }
     
     override func layoutSubviews() {
