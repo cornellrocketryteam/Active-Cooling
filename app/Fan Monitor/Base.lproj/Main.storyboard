@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="95V-3c-XFA">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="95V-3c-XFA">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -11,7 +12,7 @@
         <!--Fans-->
         <scene sceneID="CNb-FF-PnU">
             <objects>
-                <viewController id="d6C-eO-lfl" sceneMemberID="viewController">
+                <viewController id="d6C-eO-lfl" customClass="FansViewController" customModule="Fan_Monitor" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="idf-WY-L7d">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -23,51 +24,100 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Current mode: " textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tlg-3b-cRR">
-                                <rect key="frame" x="16" y="120" width="141" height="24"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Current mode: Manual" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tlg-3b-cRR">
+                                <rect key="frame" x="16" y="120" width="297" height="24"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                                 <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Kta-g5-nOC">
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="Kta-g5-nOC">
                                 <rect key="frame" x="328" y="103" width="49" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <connections>
+                                    <action selector="modeSwitchTapped:" destination="d6C-eO-lfl" eventType="valueChanged" id="OzG-fQ-Qvm"/>
+                                </connections>
                             </switch>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="8zm-Ld-7wk"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
                     <tabBarItem key="tabBarItem" title="Fans" image="fan" catalog="system" id="to6-QX-JWg"/>
+                    <connections>
+                        <outlet property="modeLabel" destination="Tlg-3b-cRR" id="xxr-D8-ZHu"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="bqx-Uw-3Nc" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1881.679389312977" y="1088.7323943661972"/>
+            <point key="canvasLocation" x="2808.3969465648852" y="1088.7323943661972"/>
         </scene>
         <!--Thermal-->
         <scene sceneID="AAw-IG-Oo0">
             <objects>
-                <viewController id="fwD-1L-JjZ" sceneMemberID="viewController">
+                <viewController id="fwD-1L-JjZ" customClass="ThermalViewController" customModule="Fan_Monitor" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="BH0-ba-7Ag">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Thermal" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="28j-ri-3r5">
-                                <rect key="frame" x="16" y="86" width="116" height="36"/>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="zqb-5R-Bxc">
+                                <rect key="frame" x="16" y="479" width="361" height="256"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="ThermalCell" rowHeight="103" id="QkB-jC-TGB" customClass="ThermalTableViewCell" customModule="Fan_Monitor" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="50" width="361" height="103"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="QkB-jC-TGB" id="P1Z-65-2Pu">
+                                            <rect key="frame" x="0.0" y="0.0" width="361" height="103"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Thermometer 1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Unq-sq-YxL">
+                                                    <rect key="frame" x="41" y="15" width="151" height="21"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                                    <color key="textColor" name="AccentColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="thermometer.high" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="nTg-U7-nNr">
+                                                    <rect key="frame" x="15" y="15" width="20" height="20"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                </imageView>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="chevron.forward" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="LRx-r6-MiG">
+                                                    <rect key="frame" x="343" y="13.333333333333332" width="14" height="15"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <color key="tintColor" systemColor="opaqueSeparatorColor"/>
+                                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" weight="semibold"/>
+                                                </imageView>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="titleLabel" destination="Unq-sq-YxL" id="4cO-hh-NxJ"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wav-CA-PS0" customClass="FillStationView" customModule="Fan_Monitor" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="162" width="393" height="309"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="30"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                                <color key="backgroundColor" name="AccentColor"/>
+                            </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="PCy-lZ-SdW"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="zqb-5R-Bxc" firstAttribute="bottom" secondItem="PCy-lZ-SdW" secondAttribute="bottom" id="2md-5a-wrA"/>
+                            <constraint firstItem="zqb-5R-Bxc" firstAttribute="trailing" secondItem="BH0-ba-7Ag" secondAttribute="trailingMargin" id="DGz-GT-pIb"/>
+                            <constraint firstItem="zqb-5R-Bxc" firstAttribute="top" secondItem="PCy-lZ-SdW" secondAttribute="top" constant="317" id="M8e-4E-62B"/>
+                            <constraint firstItem="zqb-5R-Bxc" firstAttribute="leading" secondItem="BH0-ba-7Ag" secondAttribute="leadingMargin" id="RFj-M1-Eu8"/>
+                        </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Thermal" image="thermometer.sun" catalog="system" id="y76-LB-4yH"/>
+                    <navigationItem key="navigationItem" title="Thermal" largeTitleDisplayMode="always" id="e3q-7x-4Hj"/>
+                    <connections>
+                        <outlet property="tableView" destination="zqb-5R-Bxc" id="aXf-sl-Aiq"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hrR-Da-0sr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1883" y="482"/>
+            <point key="canvasLocation" x="2806.8702290076335" y="481.69014084507046"/>
         </scene>
         <!--Tab Bar Controller-->
         <scene sceneID="151-pd-1bB">
@@ -79,7 +129,7 @@
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </tabBar>
                     <connections>
-                        <segue destination="fwD-1L-JjZ" kind="relationship" relationship="viewControllers" id="qVk-nn-Lev"/>
+                        <segue destination="zkn-iS-v5P" kind="relationship" relationship="viewControllers" id="qVk-nn-Lev"/>
                         <segue destination="d6C-eO-lfl" kind="relationship" relationship="viewControllers" id="N3B-b5-mIY"/>
                     </connections>
                 </tabBarController>
@@ -87,10 +137,37 @@
             </objects>
             <point key="canvasLocation" x="978" y="785"/>
         </scene>
+        <!--Thermal-->
+        <scene sceneID="Gk1-W6-Gdi">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="zkn-iS-v5P" sceneMemberID="viewController">
+                    <tabBarItem key="tabBarItem" title="Thermal" image="thermometer.sun" catalog="system" id="y76-LB-4yH"/>
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="neh-dk-oHB">
+                        <rect key="frame" x="0.0" y="118" width="393" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="fwD-1L-JjZ" kind="relationship" relationship="rootViewController" id="4GJ-El-YbO"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="FG3-RS-hUH" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1881.679389312977" y="481.69014084507046"/>
+        </scene>
     </scenes>
     <resources>
+        <image name="chevron.forward" catalog="system" width="97" height="128"/>
         <image name="fan" catalog="system" width="128" height="116"/>
+        <image name="thermometer.high" catalog="system" width="80" height="128"/>
         <image name="thermometer.sun" catalog="system" width="104" height="128"/>
+        <namedColor name="AccentColor">
+            <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="opaqueSeparatorColor">
+            <color red="0.77647058823529413" green="0.77647058823529413" blue="0.78431372549019607" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
