@@ -28,6 +28,7 @@
 
 //Add driver for temp sensor library here
 #include "../lib/BME280-Pico/bme280.hpp"
+#include "tusb.h"
 #include <cstdio>
 
 #define min(a,b) ((a<b) ? a:b)
@@ -37,7 +38,7 @@
 int proportional_gain = 100;
 int derivative_gain = 0;
 int integral_gain = 0;
-float desired_temp = 30;
+float desired_temp = 20;
 float measured_temp ;
 
 // PWM wrap value and clock divide value
@@ -47,19 +48,20 @@ float measured_temp ;
 #define CLKDIV 25.0f
 
 // GPIO we're using for PWM
-#define PWM_OUT_1 27
+// #define PWM_OUT_1 27
 #define PWM_OUT_2 26
 
 //Define I2C variables
 #define I2C_CHAN_0 i2c0
 #define I2C_CHAN_1 i2c1
-#define I2C0_SDA 22
+#define I2C0_SDA 20
 #define I2C0_SCL 21
 #define I2C1_SDA 6
 #define I2C1_SCL 7
+#define GPIO_TEST 0
 
 //temp variables that will be in driver - DELETE when integrated
-#define I2C_BAUD_RATE 400000
+#define I2C_BAUD_RATE 100000
 // Variable to hold PWM slice number
 uint slice_num_1 ;
 uint slice_num_2 ;
@@ -84,21 +86,30 @@ float derivative_error;
 BME280 sensor(I2C_CHAN_0);
 // PWM interrupt service routine
 void on_pwm_wrap() {
+    //printf("in pwm wrap");
     // Clear the interrupt flag that brought us here
-    pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+    //pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+   // gpio_put(GPIO_TEST, 1);
     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
 
     // Update duty cycle
     if (control!=old_control) {
+        //printf("change duty cycle");
         old_control = control ;
-        pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
+       // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
         pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
     }
     
     // Read the temp sensor
     // 
-    sensor.read_temperature(&measured_temp);
-   // printf(""+measured_temp);
+    //printf("attempt temperature read");
+    // sensor.read_temperature(&measured_temp);
+
+    // if (!sensor.read_temperature(&measured_temp)) {
+    //     //printf("Error: Sensor failed to read temperature\n");
+    // }
+    //printf("Temperature: %.2f\n\n", measured_temp);
+    //printf("%f", control);
     error = desired_temp - measured_temp;
     integral_error += error*dt;
     derivative_error = (error - prev_error)/dt;
@@ -110,6 +121,9 @@ void on_pwm_wrap() {
     else if (control > 1500){
         control = 1500;
     }
+    gpio_put(GPIO_TEST, 0);
+    //sleep_ms(20);
+
 }
 int main() {
 
@@ -118,22 +132,22 @@ int main() {
 
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
-    i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
-    gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
-    gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
-    gpio_pull_up(I2C0_SDA);
-    gpio_pull_up(I2C0_SCL);
+    // i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
+    // gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
+    // gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
+    // gpio_pull_up(I2C0_SDA);
+    // gpio_pull_up(I2C0_SCL);
 
-    while (!tud_cdc_connected()) {
-        sleep_ms(500);
-    }
-    printf("Connected\n");
+    // while (!tud_cdc_connected()) {
+    //     sleep_ms(500);
+    // }
+    // printf("Connected\n");
 
-    while (!sensor.begin()) {
-        printf("Error: Sensor failed to initialize\n");
-        sleep_ms(1000);
-    }
-
+    // while (!sensor.begin()) {
+    //     printf("Error: Sensor failed to initialize\n");
+    //     sleep_ms(1000);
+    // }
+    // printf("Left Sensor Begin Loop");
 
     // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
     // gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
@@ -145,39 +159,37 @@ int main() {
     ///////////////////////// PWM CONFIGURATION ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 // Tell GPIO PWM_OUT that it is allocated to the PWM
-    gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
+    //gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
     gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
-
+    // gpio_init(GPIO_TEST);
+    // gpio_set_dir(GPIO_TEST, GPIO_OUT);
+    //gpio_put(GPIO_TEST, 1);
     // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
-    slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
+   // slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
     slice_num_2 = pwm_gpio_to_slice_num(PWM_OUT_2);
-
     // Mask our slice's IRQ output into the PWM block's single interrupt line,
     // and register our interrupt handler
-    pwm_clear_irq(slice_num_1);
+    //pwm_clear_irq(slice_num_1);
     pwm_clear_irq(slice_num_2);
-    pwm_set_irq_enabled(slice_num_1, true);
+   // pwm_set_irq_enabled(slice_num_1, true);
     pwm_set_irq_enabled(slice_num_2, true);
     irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
     irq_set_enabled(PWM_IRQ_WRAP, true);
-
     // This section configures the period of the PWM signals
-    pwm_set_wrap(slice_num_1, WRAPVAL) ;
+    //pwm_set_wrap(slice_num_1, WRAPVAL) ;
     pwm_set_wrap(slice_num_2, WRAPVAL);
-    pwm_set_clkdiv(slice_num_1, CLKDIV) ;
+    //pwm_set_clkdiv(slice_num_1, CLKDIV) ;
     pwm_set_clkdiv(slice_num_2, CLKDIV) ; 
 
-    pwm_set_output_polarity(slice_num_1, 1, 1);
+    //pwm_set_output_polarity(slice_num_1, 1, 1);
     pwm_set_output_polarity(slice_num_2, 1, 1);
-
     // This sets duty cycle
-    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 1500);
-    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 1500);
-
+    //pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 1500);
+    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 3125);
     // Start the channel
-    pwm_set_mask_enabled((1u << slice_num_1));
+    //pwm_set_mask_enabled((1u << slice_num_1));
     pwm_set_mask_enabled((1u << slice_num_2));
-
+    //gpio_put(GPIO_TEST, 0);
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////////// ROCK AND ROLL ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
