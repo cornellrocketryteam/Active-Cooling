@@ -31,8 +31,8 @@
 #define CLKDIV 25.0f
 
 // GPIO we're using for PWM
-#define PWM_OUT_1 24
-#define PWM_OUT_2 23
+#define PWM_OUT_1 27
+#define PWM_OUT_2 26
 
 // Variable to hold PWM slice number
 uint slice_num_1 ;
@@ -53,6 +53,7 @@ void on_pwm_wrap() {
     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
 
     // Update duty cycle
+    control = 4000;
     if (control!=old_control) {
         old_control = control ;
         pwm_set_chan_level(slice_num_1, PWM_CHAN_A, control);

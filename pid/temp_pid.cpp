@@ -46,8 +46,8 @@ float measured_temp = 30;
 #define CLKDIV 25.0f
 
 // GPIO we're using for PWM
-#define PWM_OUT_1 24
-#define PWM_OUT_2 23
+#define PWM_OUT_1 27
+#define PWM_OUT_2 26
 
 //Define I2C variables
 #define I2C_CHAN_0 i2c0
