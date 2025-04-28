@@ -48,7 +48,7 @@ float measured_temp ;
 #define CLKDIV 25.0f
 
 // GPIO we're using for PWM
-// #define PWM_OUT_1 27
+#define PWM_OUT_1 27
 #define PWM_OUT_2 26
 
 //Define I2C variables
@@ -89,7 +89,7 @@ void on_pwm_wrap() {
     //printf("in pwm wrap");
     // Clear the interrupt flag that brought us here
     //pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
-   // gpio_put(GPIO_TEST, 1);
+    gpio_put(GPIO_TEST, 1);
     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
 
     // Update duty cycle
@@ -101,15 +101,15 @@ void on_pwm_wrap() {
     }
     
     // Read the temp sensor
-    // 
+    
     //printf("attempt temperature read");
-    // sensor.read_temperature(&measured_temp);
+    sensor.read_temperature(&measured_temp);
 
-    // if (!sensor.read_temperature(&measured_temp)) {
-    //     //printf("Error: Sensor failed to read temperature\n");
-    // }
-    //printf("Temperature: %.2f\n\n", measured_temp);
-    //printf("%f", control);
+    if (!sensor.read_temperature(&measured_temp)) {
+        //printf("Error: Sensor failed to read temperature\n");
+    }
+    printf("Temperature: %.2f\n\n", measured_temp);
+    printf("%f", control);
     error = desired_temp - measured_temp;
     integral_error += error*dt;
     derivative_error = (error - prev_error)/dt;
@@ -132,21 +132,21 @@ int main() {
 
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
-    // i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
-    // gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
-    // gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
-    // gpio_pull_up(I2C0_SDA);
-    // gpio_pull_up(I2C0_SCL);
+    i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
+    gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
+    gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
+    gpio_pull_up(I2C0_SDA);
+    gpio_pull_up(I2C0_SCL);
 
-    // while (!tud_cdc_connected()) {
-    //     sleep_ms(500);
-    // }
-    // printf("Connected\n");
+    while (!tud_cdc_connected()) {
+        sleep_ms(500);
+    }
+    printf("Connected\n");
 
-    // while (!sensor.begin()) {
-    //     printf("Error: Sensor failed to initialize\n");
-    //     sleep_ms(1000);
-    // }
+    while (!sensor.begin()) {
+        printf("Error: Sensor failed to initialize\n");
+        sleep_ms(50);
+    }
     // printf("Left Sensor Begin Loop");
 
     // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
@@ -161,8 +161,8 @@ int main() {
 // Tell GPIO PWM_OUT that it is allocated to the PWM
     //gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
     gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
-    // gpio_init(GPIO_TEST);
-    // gpio_set_dir(GPIO_TEST, GPIO_OUT);
+    gpio_init(GPIO_TEST);
+    gpio_set_dir(GPIO_TEST, GPIO_OUT);
     //gpio_put(GPIO_TEST, 1);
     // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
    // slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
@@ -200,5 +200,9 @@ int main() {
     // // start core 0
     // pt_add_thread(protothread_serial) ;
     // pt_schedule_start ;
+    while(1)
+    {
+
+    }
 
 }
