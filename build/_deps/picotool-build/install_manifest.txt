@@ -1,5 +1,0 @@
-/home/nslnmusic/CDC/build/_deps/picotool/picotool
-/home/nslnmusic/CDC/build/_deps/picotool/picotoolTargets.cmake
-/home/nslnmusic/CDC/build/_deps/picotool/picotoolTargets-release.cmake
-/home/nslnmusic/CDC/build/_deps/picotool/picotoolConfig.cmake
-/home/nslnmusic/CDC/build/_deps/picotool/picotoolConfigVersion.cmake
