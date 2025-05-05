@@ -82,8 +82,10 @@ float error;
 float prev_error;
 float integral_error;
 float derivative_error;
-//Sensor Variables
+
+// Sensor Variables
 BME280 sensor(I2C_CHAN_0);
+
 // PWM interrupt service routine
 void on_pwm_wrap() {
     //printf("in pwm wrap");
@@ -100,15 +102,6 @@ void on_pwm_wrap() {
         pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
     }
     
-    // Read the temp sensor
-    
-    //printf("attempt temperature read");
-    sensor.read_temperature(&measured_temp);
-
-    if (!sensor.read_temperature(&measured_temp)) {
-        //printf("Error: Sensor failed to read temperature\n");
-    }
-    printf("Temperature: %.2f\n\n", measured_temp);
     printf("%f", control);
     error = desired_temp - measured_temp;
     integral_error += error*dt;
@@ -125,6 +118,18 @@ void on_pwm_wrap() {
     //sleep_ms(20);
 
 }
+
+// Temperature polling thread
+static PT_THREAD (protothread_temp(struct pt *pt)){
+    sensor.read_temperature(&measured_temp);
+
+    if (!sensor.read_temperature(&measured_temp)) {
+        printf("Error: Sensor failed to read temperature\n");
+    }
+    printf("Temperature: %.2f\n\n", measured_temp);
+}
+
+
 int main() {
 
     // Initialize stdio
@@ -197,9 +202,9 @@ int main() {
     // multicore_reset_core1();
     // multicore_launch_core1(core1_entry);
 
-    // // start core 0
-    // pt_add_thread(protothread_serial) ;
-    // pt_schedule_start ;
+    // start core 0
+    pt_add_thread(protothread_temp) ;
+    pt_schedule_start ;
     while(1)
     {
 
