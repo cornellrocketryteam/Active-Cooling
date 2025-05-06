@@ -121,12 +121,14 @@ void on_pwm_wrap() {
 
 // Temperature polling thread
 static PT_THREAD (protothread_temp(struct pt *pt)){
+    PT_BEGIN(pt);
     sensor.read_temperature(&measured_temp);
 
     if (!sensor.read_temperature(&measured_temp)) {
         printf("Error: Sensor failed to read temperature\n");
     }
     printf("Temperature: %.2f\n\n", measured_temp);
+    PT_END(pt);
 }
 
 
@@ -205,9 +207,9 @@ int main() {
     // start core 0
     pt_add_thread(protothread_temp) ;
     pt_schedule_start ;
-    while(1)
-    {
+    // while(1)
+    // {
 
-    }
+    // }
 
 }
