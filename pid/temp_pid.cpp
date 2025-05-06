@@ -35,10 +35,8 @@
 #define max(a,b) ((a<b) ? b:a)
 #define abs(a) ((a>0) ? a:-a)
 
-int proportional_gain = 100;
-int derivative_gain = 0;
-int integral_gain = 0;
-float desired_temp = 20;
+float proportional_gain = 100;
+float desired_temp = 23;
 float measured_temp ;
 
 // PWM wrap value and clock divide value
@@ -67,8 +65,10 @@ uint slice_num_1 ;
 uint slice_num_2 ;
 
 // PWM duty cycle
-volatile int control ;
-volatile int old_control ;
+volatile int control_1;
+volatile int old_control_1;
+volatile int control_2 ;
+volatile int old_control_2 ;
 
 //Controller variables
 volatile float k_p;
@@ -78,16 +78,42 @@ volatile float k_d;
 //PID + Intermediary variables
 float dt = 0.001;
 
-float error;
-float prev_error;
-float integral_error;
-float derivative_error;
+float error_1;
+float prev_error_1;
+float error_2;
+float prev_error_2;
 
 // Sensor Variables
 BME280 sensor(I2C_CHAN_0);
 
-// PWM interrupt service routine
-void on_pwm_wrap() {
+// PWM interrupt service routine - Fan 1
+void on_pwm_wrap_1() {
+    //printf("in pwm wrap");
+    // Clear the interrupt flag that brought us here
+    pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+
+    // Update duty cycle
+    if (control_1!=old_control_1) {
+        //printf("change duty cycle");
+        old_control_1 = control_1 ;
+        pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+    }
+    error_1 = measured_temp - desired_temp;
+    control_1 = (int)(proportional_gain*error_1);
+    prev_error_1 = error_1;
+    printf("Error: %f\n", error_1);
+    printf("Control: %i\n",control_1);
+    if (control_1 < 0) {
+        control_1 = 0;
+    }
+    else if (control_1 > 1500){
+        control_1 = 1500;
+    }
+    //sleep_ms(20);
+}
+
+// PWM interrupt service routine - Fan 2
+void on_pwm_wrap_2() {
     //printf("in pwm wrap");
     // Clear the interrupt flag that brought us here
     //pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
@@ -95,28 +121,24 @@ void on_pwm_wrap() {
     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
 
     // Update duty cycle
-    if (control!=old_control) {
+    if (control_2!=old_control_2) {
         //printf("change duty cycle");
-        old_control = control ;
+        old_control_2 = control_2 ;
        // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
-        pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
+        pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
     }
-    
-    printf("%f", control);
-    error = desired_temp - measured_temp;
-    integral_error += error*dt;
-    derivative_error = (error - prev_error)/dt;
-    control = proportional_gain*error + integral_gain*integral_error + derivative_gain*derivative_error;
-    prev_error = error;
-    if (control < 0) {
-        control = 0;
+    error_2 = measured_temp - desired_temp;
+    control_2 = (int)(proportional_gain*error_2);
+    prev_error_2 = error_2;
+    // printf("Error: %f\n", error_2);
+    // printf("Control: %i\n",control_2);
+    if (control_2 < 0) {
+        control_2 = 0;
     }
-    else if (control > 1500){
-        control = 1500;
+    else if (control_2 > 1500){
+        control_2 = 1500;
     }
-    gpio_put(GPIO_TEST, 0);
     //sleep_ms(20);
-
 }
 
 // Temperature polling thread
@@ -166,37 +188,35 @@ int main() {
     ///////////////////////// PWM CONFIGURATION ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 // Tell GPIO PWM_OUT that it is allocated to the PWM
-    //gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
+    gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
     gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
-    gpio_init(GPIO_TEST);
-    gpio_set_dir(GPIO_TEST, GPIO_OUT);
-    //gpio_put(GPIO_TEST, 1);
     // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
-   // slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
+    slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
     slice_num_2 = pwm_gpio_to_slice_num(PWM_OUT_2);
     // Mask our slice's IRQ output into the PWM block's single interrupt line,
     // and register our interrupt handler
-    //pwm_clear_irq(slice_num_1);
+    pwm_clear_irq(slice_num_1);
     pwm_clear_irq(slice_num_2);
-   // pwm_set_irq_enabled(slice_num_1, true);
+    pwm_set_irq_enabled(slice_num_1, true);
     pwm_set_irq_enabled(slice_num_2, true);
-    irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
+   // irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
+    irq_add_shared_handler(PWM_IRQ_WRAP, on_pwm_wrap_1, 1);
+    irq_add_shared_handler(PWM_IRQ_WRAP, on_pwm_wrap_2, 0);
     irq_set_enabled(PWM_IRQ_WRAP, true);
     // This section configures the period of the PWM signals
-    //pwm_set_wrap(slice_num_1, WRAPVAL) ;
+    pwm_set_wrap(slice_num_1, WRAPVAL) ;
     pwm_set_wrap(slice_num_2, WRAPVAL);
-    //pwm_set_clkdiv(slice_num_1, CLKDIV) ;
+    pwm_set_clkdiv(slice_num_1, CLKDIV) ;
     pwm_set_clkdiv(slice_num_2, CLKDIV) ; 
 
-    //pwm_set_output_polarity(slice_num_1, 1, 1);
+    pwm_set_output_polarity(slice_num_1, 1, 1);
     pwm_set_output_polarity(slice_num_2, 1, 1);
     // This sets duty cycle
-    //pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 1500);
+    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 3125);
     pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 3125);
     // Start the channel
-    //pwm_set_mask_enabled((1u << slice_num_1));
+    pwm_set_mask_enabled((1u << slice_num_1));
     pwm_set_mask_enabled((1u << slice_num_2));
-    //gpio_put(GPIO_TEST, 0);
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////////// ROCK AND ROLL ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
