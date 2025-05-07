@@ -105,7 +105,7 @@ extension ThermalViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ThermalCell", for: indexPath) as? ThermalTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ThermalCell", for: indexPath) as? StatsTableViewCell else {
             return UITableViewCell()
         }
         if (indexPath.row < 3) {

@@ -1,5 +1,5 @@
 //
-//  ThermalTableViewCell.swift
+//  StatsTableViewCell.swift
 //  Fan Monitor
 //
 //  Created by Cameron Goddard on 4/20/25.
@@ -8,7 +8,7 @@
 import UIKit
 import SwiftUI
 
-class ThermalTableViewCell: UITableViewCell {
+class StatsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var chartContainerView: UIView!
