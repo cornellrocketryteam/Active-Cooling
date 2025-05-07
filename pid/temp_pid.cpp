@@ -56,7 +56,6 @@ float measured_temp ;
 #define I2C0_SCL 21
 #define I2C1_SDA 6
 #define I2C1_SCL 7
-#define GPIO_TEST 0
 
 //temp variables that will be in driver - DELETE when integrated
 #define I2C_BAUD_RATE 100000
@@ -116,8 +115,6 @@ void on_pwm_wrap_1() {
 void on_pwm_wrap_2() {
     //printf("in pwm wrap");
     // Clear the interrupt flag that brought us here
-    //pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
-    gpio_put(GPIO_TEST, 1);
     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
 
     // Update duty cycle
