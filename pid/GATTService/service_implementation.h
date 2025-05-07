@@ -261,7 +261,7 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 }
 
 // Update Temp 1 value
-void set_temp_1_value(int32_t * value){
+void set_temp_1_value(float * value){
 	// Pointer to our service object
 	GYATT_DB * instance = &service_object ;
 
@@ -277,7 +277,7 @@ void set_temp_1_value(int32_t * value){
 }
 
 // Update Temperature 2  value
-void set_temp_2_value(int32_t * value){
+void set_temp_2_value(float * value){
 	// Pointer to our service object
 	GYATT_DB * instance = &service_object ;
 
@@ -310,7 +310,7 @@ void set_temp_3_value(float * value){
 }
 
 // Update PWM 1 value
-void set_pwm_1_value(float * value){
+void set_pwm_1_value(int32_t * value){
 
 	// Pointer to our service object
 	GYATT_DB * instance = &service_object ;
@@ -327,7 +327,7 @@ void set_pwm_1_value(float * value){
 }
 
 // Update PWM 2 value
-void set_pwm_2_value(bool * value){
+void set_pwm_2_value(int32_t * value){
 
 	// Pointer to our service object
 	GYATT_DB * instance = &service_object ;
