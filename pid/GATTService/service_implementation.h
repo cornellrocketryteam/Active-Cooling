@@ -266,7 +266,7 @@ void set_temp_1_value(float * value){
 	GYATT_DB * instance = &service_object ;
 
 	// Update field value
-	sprintf(instance->temp_1_value, "%d", *value);
+	sprintf(instance->temp_1_value, "%.3f", *value);
 
 	if (instance->temp_1_client_configuration) {
 		// Register a callback
@@ -282,7 +282,7 @@ void set_temp_2_value(float * value){
 	GYATT_DB * instance = &service_object ;
 
 	// Update field value
-	sprintf(instance->temp_2_value, "%d", *value) ;
+	sprintf(instance->temp_2_value, "%.3f", *value) ;
 
 	if (instance->temp_2_client_configuration) {
 		// Register a callback
@@ -316,7 +316,7 @@ void set_pwm_1_value(int32_t * value){
 	GYATT_DB * instance = &service_object ;
 
 	// Update field value
-	sprintf(instance->pwm_1_value, "%.3f", *value) ;
+	sprintf(instance->pwm_1_value, "%d", *value) ;
 
 	if (instance->pwm_1_client_configuration) {
 		// Register a callback
