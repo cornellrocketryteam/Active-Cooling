@@ -43,7 +43,7 @@ class FansViewController: UIViewController {
             if let sheet = sheetVC.sheetPresentationController {
                 sheet.detents = [
                         .custom { context in
-                            return 250
+                            return 150
                         }
                     ]
                 sheet.prefersGrabberVisible = true

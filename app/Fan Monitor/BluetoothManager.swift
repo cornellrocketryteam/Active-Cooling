@@ -8,11 +8,6 @@
 import Foundation
 import CoreBluetooth
 
-let Fan1_Char_UUID = CBUUID(string: "00000004-0000-0715-2006-853A52A41A44")
-let Fan2_Char_UUID = CBUUID(string: "00000003-0000-0715-2006-853A52A41A44")
-let Temp1_Char_UUID = CBUUID(string: "00000002-0000-0715-2006-853A52A41A44")
-let Temp2_Char_UUID = CBUUID(string: "00000005-0000-0715-2006-853A52A41A44")
-let Temp3_Char_UUID = CBUUID(string: "00000006-0000-0715-2006-853A52A41A44")
 
 class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
@@ -24,13 +19,21 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var rssiList = [NSNumber]()
         
     let BLE_Service_UUID = CBUUID.init(string: "00000001-0000-0715-2006-853A52A41A44")
+
+    let Temp1_Char_UUID = CBUUID(string: "00000002-0000-0715-2006-853A52A41A44")
+    let Temp2_Char_UUID = CBUUID(string: "00000003-0000-0715-2006-853A52A41A44")
+    let Temp3_Char_UUID = CBUUID(string: "00000004-0000-0715-2006-853A52A41A44")
+    let Fan1_Char_UUID = CBUUID(string: "00000005-0000-0715-2006-853A52A41A44")
+    let Fan2_Char_UUID = CBUUID(string: "00000006-0000-0715-2006-853A52A41A44")
+    let Kp_Char_UUID = CBUUID(string: "00000007-0000-0715-2006-853A52A41A44")
     
-    private var fan1Char: CBCharacteristic?
-    private var fan2Char: CBCharacteristic?
     private var temp1Char: CBCharacteristic?
     private var temp2Char: CBCharacteristic?
     private var temp3Char: CBCharacteristic?
-
+    
+    var fan1Char: CBCharacteristic?
+    var fan2Char: CBCharacteristic?
+    var kpChar: CBCharacteristic?
     
     private override init() {
         super.init()
@@ -227,6 +230,15 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         // For every descriptor, print its description for debugging purposes
         descriptors.forEach { descript in
             print("function name: DidDiscoverDescriptorForChar \(String(describing: descript.description))")
+        }
+    }
+    
+    func write(to characteristic: CBCharacteristic?, value: String) {
+        guard let peripheral = currPeripheral,
+              let characteristic = characteristic else { return }
+
+        if let data = value.data(using: .utf8) {
+            peripheral.writeValue(data, for: characteristic, type: .withResponse)
         }
     }
 }

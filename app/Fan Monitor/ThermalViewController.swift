@@ -20,7 +20,7 @@ class ThermalViewController: UIViewController {
     var selectedUnit: UnitType = .celsius
     var thermalCameraOn = false
     
-    var temps: [Float] = [0, 0, 0]
+    var currentTemps: [Float] = [0, 0, 0]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,13 +47,13 @@ class ThermalViewController: UIViewController {
         
         switch notification.name {
         case .temp1DidUpdate:
-            temps[0] = temp
+            currentTemps[0] = temp
             indexToUpdate = 0
         case .temp2DidUpdate:
-            temps[1] = temp
+            currentTemps[1] = temp
             indexToUpdate = 1
         case .temp3DidUpdate:
-            temps[2] = temp
+            currentTemps[2] = temp
             indexToUpdate = 2
         default:
             return
@@ -143,7 +143,7 @@ extension ThermalViewController: UITableViewDataSource {
         }
         
         cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
-        let displayTemp = selectedUnit == .fahrenheit ? (temps[indexPath.row] * 9.0 / 5.0 + 32) : temps[indexPath.row]
+        let displayTemp = selectedUnit == .fahrenheit ? (currentTemps[indexPath.row] * 9.0 / 5.0 + 32) : currentTemps[indexPath.row]
         cell.update(with: displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
         fillStationView.update(for: indexPath.row + 1, value: displayTemp)
         
