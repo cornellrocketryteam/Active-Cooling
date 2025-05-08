@@ -8,6 +8,12 @@
 import Foundation
 import CoreBluetooth
 
+let Fan1_Char_UUID = CBUUID(string: "00000004-0000-0715-2006-853A52A41A44")
+let Fan2_Char_UUID = CBUUID(string: "00000003-0000-0715-2006-853A52A41A44")
+let Temp1_Char_UUID = CBUUID(string: "00000002-0000-0715-2006-853A52A41A44")
+let Temp2_Char_UUID = CBUUID(string: "00000005-0000-0715-2006-853A52A41A44")
+let Temp3_Char_UUID = CBUUID(string: "00000006-0000-0715-2006-853A52A41A44")
+
 class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     static let shared = BluetoothManager()
@@ -16,10 +22,15 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     var currPeripheral: CBPeripheral?
     var rssiList = [NSNumber]()
-    
-    private var peripheralList: [CBPeripheral] = []
-    
+        
     let BLE_Service_UUID = CBUUID.init(string: "00000001-0000-0715-2006-853A52A41A44")
+    
+    private var fan1Char: CBCharacteristic?
+    private var fan2Char: CBCharacteristic?
+    private var temp1Char: CBCharacteristic?
+    private var temp2Char: CBCharacteristic?
+    private var temp3Char: CBCharacteristic?
+
     
     private override init() {
         super.init()
@@ -27,8 +38,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     func startScan() {
-        peripheralList = []
-                
+        print("Scanning...")
         centralManager?.scanForPeripherals(withServices: [BLE_Service_UUID], options: [CBCentralManagerScanOptionAllowDuplicatesKey:false])
     }
     
@@ -45,8 +55,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     // Called when a peripheral is found
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         
+        print("Peripheral Found: \(peripheral.name ?? "Unknown"))")
         self.currPeripheral = peripheral
-        self.peripheralList.append(peripheral)
         
         self.rssiList.append(RSSI)
         peripheral.delegate = self
@@ -67,11 +77,11 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
             
-            if error != nil {
-                print("Error: Failed to connect to peripheral")
-                return
-            }
+        if error != nil {
+            print("Error: Failed to connect to peripheral")
+            return
         }
+    }
         
     // Called when the central manager disconnects from the peripheral
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
@@ -125,12 +135,57 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         
         // For every characteristic found...
         for characteristic in characteristics {
-            
+            switch characteristic.uuid {
+            case Fan1_Char_UUID:
+                fan1Char = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+            case Fan2_Char_UUID:
+                fan2Char = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+            case Temp1_Char_UUID:
+                temp1Char = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+            case Temp2_Char_UUID:
+                temp2Char = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+            case Temp3_Char_UUID:
+                temp3Char = characteristic
+                peripheral.setNotifyValue(true, for: characteristic)
+            default:
+                print("Unknown characteristic: \(characteristic.uuid)")
+            }
+        }
+
+    }
+        
+    // Called when peripheral.readValue(for: characteristic) is called
+    // Also called when characteristic value is updated in
+    // didUpdateNotificationStateFor() method
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard let value = characteristic.value else { return }
+        
+        let stringValue = String(decoding: value, as: UTF8.self)
+//        
+        print("Characteristic uuid: \(characteristic.uuid), value: \(stringValue)")
+        
+        
+        switch characteristic.uuid {
+        case Fan1_Char_UUID:
+            NotificationCenter.default.post(name: .fan1DidUpdate, object: stringValue)
+        case Fan2_Char_UUID:
+            NotificationCenter.default.post(name: .fan2DidUpdate, object: stringValue)
+        case Temp1_Char_UUID:
+            print("Temp 1")
+            NotificationCenter.default.post(name: .temp1DidUpdate, object: stringValue)
+        case Temp2_Char_UUID:
+            NotificationCenter.default.post(name: .temp2DidUpdate, object: stringValue)
+        case Temp3_Char_UUID:
+            NotificationCenter.default.post(name: .temp3DidUpdate, object: stringValue)
+        default:
+            print("Unhandled characteristic: \(characteristic.uuid)")
         }
     }
-
-    // Sets up notifications to the app from the Feather
-    // Calls didUpdateValueForCharacteristic() whenever characteristic's value changes
+    
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         print("*******************************************************")
 
@@ -147,21 +202,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             print("Subscribed. Notification has begun for: \(characteristic.uuid)")
         }
     }
-        
-    // Called when peripheral.readValue(for: characteristic) is called
-    // Also called when characteristic value is updated in
-    // didUpdateNotificationStateFor() method
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
-                    error: Error?) {
-        
-        switch characteristic.uuid {
-        
-        default:
-            print("Unknown characteristic: \(characteristic.uuid)")
-        }
-        
-        NotificationCenter.default.post(name:NSNotification.Name(rawValue: "Notify"), object: self)
-    }
+
     
     // Called when app wants to send a message to peripheral
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -191,5 +232,9 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 }
 
 extension Notification.Name {
-    static let bluetoothDidUpdate = Notification.Name("bluetoothDidUpdate")
+    static let fan1DidUpdate = Notification.Name("fan1DidUpdate")
+    static let fan2DidUpdate = Notification.Name("fan2DidUpdate")
+    static let temp1DidUpdate = Notification.Name("temp1DidUpdate")
+    static let temp2DidUpdate = Notification.Name("temp2DidUpdate")
+    static let temp3DidUpdate = Notification.Name("temp3DidUpdate")
 }

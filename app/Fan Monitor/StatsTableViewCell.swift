@@ -11,9 +11,16 @@ import SwiftUI
 class StatsTableViewCell: UITableViewCell {
 
     @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var currentTimeLabel: UILabel!
+    @IBOutlet weak var currentValueLabel: UILabel!
     @IBOutlet weak var chartContainerView: UIView!
     
     private var chartHost: UIHostingController<ChartWrapperView>?
+    private var chartData: [Double] = []
+    
+    private var chartModel = ChartDataModel()
+    
+    private var dataBinding: Binding<[Double]>!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -24,10 +31,20 @@ class StatsTableViewCell: UITableViewCell {
         contentView.backgroundColor = .white
         backgroundColor = .clear
         
+//        chartData = []
+//        dataBinding = Binding(
+//            get: { self.chartData },
+//            set: { self.chartData = $0 }
+//        )
+//
+//        
+////        let sampleData: [Double] = [42, 44, 43, 45, 46]
+//        let chartView = ChartWrapperView(data: dataBinding)
+//        let hosting = UIHostingController(rootView: chartView)
         
-        let sampleData: [Double] = [42, 44, 43, 45, 46]
-        let chartView = ChartWrapperView(data: sampleData)
+        let chartView = ChartWrapperView(model: chartModel)
         let hosting = UIHostingController(rootView: chartView)
+
 
         chartHost = hosting
         guard let hostView = hosting.view else { return }
@@ -41,6 +58,17 @@ class StatsTableViewCell: UITableViewCell {
             hostView.trailingAnchor.constraint(equalTo: chartContainerView.trailingAnchor),
             hostView.bottomAnchor.constraint(equalTo: chartContainerView.bottomAnchor)
         ])
+    }
+    
+    func update(with temperature: Float) {
+        let value = Double(temperature)
+
+//        currentValueLabel.text = String(format: "%.1f °C", value)
+
+        chartModel.data.append(value)
+        if chartModel.data.count > 6 {
+            chartModel.data.removeFirst()
+        }
     }
     
     override func layoutSubviews() {

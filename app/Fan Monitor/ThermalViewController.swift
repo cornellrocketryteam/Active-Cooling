@@ -19,6 +19,8 @@ class ThermalViewController: UIViewController {
     var selectedUnit: UnitType = .celsius
     var thermalCameraOn = false
     
+    var temps: [Float] = [0, 0, 0]
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -29,7 +31,31 @@ class ThermalViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
+        NotificationCenter.default.addObserver(self, selector: #selector(updateTemp(_:)), name: .temp1DidUpdate, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateTemp(_:)), name: .temp2DidUpdate, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateTemp(_:)), name: .temp3DidUpdate, object: nil)
+        
         setupSettingsMenu()
+    }
+    
+    @objc func updateTemp(_ notification: Notification) {
+        guard let str = notification.object as? String,
+              let temp = Float(str) else { return }
+        
+        switch notification.name {
+        case .temp1DidUpdate:
+            temps[0] = temp
+        case .temp2DidUpdate:
+            temps[1] = temp
+        case .temp3DidUpdate:
+            temps[2] = temp
+        default:
+            return
+        }
+
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
     }
     
     func setupSettingsMenu() {
@@ -110,6 +136,11 @@ extension ThermalViewController: UITableViewDataSource {
         }
         if (indexPath.row < 3) {
             cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+            print("in here here here")
+            let displayTemp = selectedUnit == .fahrenheit ? (temps[indexPath.row] * 9.0 / 5.0 + 32) : temps[indexPath.row]
+            cell.currentValueLabel.attributedText = formattedTemperatureString(displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
+            cell.update(with: displayTemp)
+            
         } else {
             cell.titleLabel.text = "Thermal Camera"
         }
@@ -117,4 +148,28 @@ extension ThermalViewController: UITableViewDataSource {
 
         return cell
     }
+    
+    func formattedTemperatureString(_ value: Float, unit: String) -> NSAttributedString {
+        let fullString = String(format: "%.1f %@", value, unit)
+        let attributed = NSMutableAttributedString(string: fullString)
+
+        let numberString = String(format: "%.1f", value)
+
+        if let numberRange = fullString.range(of: numberString) {
+            let nsNumberRange = NSRange(numberRange, in: fullString)
+            attributed.addAttribute(.font, value: UIFont.monospacedDigitSystemFont(ofSize: 28, weight: .semibold), range: nsNumberRange)
+        }
+
+        if let unitRange = fullString.range(of: unit) {
+            let nsUnitRange = NSRange(unitRange, in: fullString)
+            attributed.addAttributes([
+                .font: UIFont.boldSystemFont(ofSize: 16),
+                .foregroundColor: UIColor.gray
+            ], range: nsUnitRange)
+        }
+
+        return attributed
+    }
+
+
 }

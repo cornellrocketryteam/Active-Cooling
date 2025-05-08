@@ -171,7 +171,7 @@
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="42°" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="smh-iU-9RM">
-                                                                    <rect key="frame" x="20" y="92" width="48" height="34"/>
+                                                                    <rect key="frame" x="20" y="92" width="127" height="34"/>
                                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                                     <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="28"/>
                                                                     <nil key="textColor"/>
@@ -186,6 +186,8 @@
                                                         </tableViewCellContentView>
                                                         <connections>
                                                             <outlet property="chartContainerView" destination="6C2-jb-I1O" id="cDq-FU-vmP"/>
+                                                            <outlet property="currentTimeLabel" destination="sak-pa-4iT" id="Aoz-Lc-P4W"/>
+                                                            <outlet property="currentValueLabel" destination="smh-iU-9RM" id="GgK-c7-FTm"/>
                                                             <outlet property="titleLabel" destination="Unq-sq-YxL" id="4cO-hh-NxJ"/>
                                                         </connections>
                                                     </tableViewCell>
@@ -233,7 +235,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hrR-Da-0sr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2662" y="482"/>
+            <point key="canvasLocation" x="2661.8320610687024" y="481.69014084507046"/>
         </scene>
         <!--Thermal Detail View Controller-->
         <scene sceneID="aJh-Em-tUT">
