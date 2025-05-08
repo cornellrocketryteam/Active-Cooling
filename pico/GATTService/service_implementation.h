@@ -186,6 +186,18 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
     UNUSED(offset);
     UNUSED(buffer_size);
 
+	// Write value directly to PWM 1 characteristic
+	if (attribute_handle == service_object.pwm_1_handle) {
+		memcpy(service_object.pwm_1_value, buffer, buffer_size);
+		service_object.pwm_1_value[buffer_size] = '\0';  // Null-terminate
+	}
+
+	// Write value directly to PWM 2 characteristic
+	if (attribute_handle == service_object.pwm_2_handle) {
+		memcpy(service_object.pwm_2_value, buffer, buffer_size);
+		service_object.pwm_2_value[buffer_size] = '\0';  // Null-terminate
+	}
+
 	// Enable/disable notifications - Temp 1 
     if (attribute_handle == service_object.temp_1_client_configuration_handle){
         service_object.temp_1_client_configuration = little_endian_read_16(buffer, 0);
