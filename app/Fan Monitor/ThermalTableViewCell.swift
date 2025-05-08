@@ -8,7 +8,7 @@
 import UIKit
 import SwiftUI
 
-class StatsTableViewCell: UITableViewCell {
+class ThermalTableViewCell: UITableViewCell {
 
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var currentTimeLabel: UILabel!
@@ -16,7 +16,7 @@ class StatsTableViewCell: UITableViewCell {
     @IBOutlet weak var chartContainerView: UIView!
     
     private var chartData: [Float] = []
-    private var chartModel = ChartDataModel()
+    private var chartModel = ThermalChartDataModel()
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -27,7 +27,7 @@ class StatsTableViewCell: UITableViewCell {
         contentView.backgroundColor = .white
         backgroundColor = .clear
         
-        let chartView = TemperatureChartView(model: chartModel, color: .blue)
+        let chartView = ThermalChartView(model: chartModel, color: .blue)
         let hosting = UIHostingController(rootView: chartView)
 
         guard let hostView = hosting.view else { return }
@@ -50,7 +50,6 @@ class StatsTableViewCell: UITableViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-
         contentView.frame = contentView.frame.inset(by: UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0))
     }
     

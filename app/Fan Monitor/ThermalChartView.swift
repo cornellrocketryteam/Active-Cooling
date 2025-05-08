@@ -8,7 +8,7 @@
 import SwiftUI
 import Charts
 
-class ChartDataModel: ObservableObject {
+class ThermalChartDataModel: ObservableObject {
     @Published var data: [(time: Date, value: Float)] = []
 
     func append(_ value: Float) {
@@ -20,8 +20,8 @@ class ChartDataModel: ObservableObject {
     }
 }
 
-struct TemperatureChartView: View {
-    @ObservedObject var model: ChartDataModel
+struct ThermalChartView: View {
+    @ObservedObject var model: ThermalChartDataModel
     var color: Color = .blue
     var smoothed: Bool = true
 
