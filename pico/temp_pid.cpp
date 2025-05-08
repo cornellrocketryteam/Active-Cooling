@@ -57,8 +57,8 @@ float measured_temp ;
 // PWM wrap value and clock divide value
 // For a CPU rate of 125 MHz, this gives
 // a PWM frequency of 1 kHz.
-#define WRAPVAL 5000
-#define CLKDIV 25.0f
+#define WRAPVAL 10000
+#define CLKDIV 50.0f
 
 // GPIO we're using for PWM
 #define PWM_OUT_1 27
@@ -84,6 +84,10 @@ volatile int old_control_1;
 volatile int control_2 ;
 volatile int old_control_2 ;
 
+//PWM control flag
+volatile bool update_PWM_1;
+volatile bool update_PWM_2;
+
 //Controller variables
 volatile float k_p;
 volatile float k_i;
@@ -98,7 +102,9 @@ float error_2;
 float prev_error_2;
 
 // Sensor Variables
-BME280 sensor(I2C_CHAN_0);
+BME280 sensor_1(I2C_CHAN_0);
+BME280 sensor_2(I2C_CHAN_0);
+BME280 sensor_3(I2C_CHAN_1);
 
 //Bluetooth variables
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -116,68 +122,136 @@ bool getBit(uint16_t metadata, int position)
     return (metadata >> position) & 0x1;
 
 }
+//PWM interrupt service routine
+void on_pwm_wrap(){
+    uint32_t status = pwm_get_irq_status_mask();
+    if(status & (1 << slice_num_1)){
+        pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+        update_PWM_1 = true;
+    }
+    if(status & (1 << slice_num_2)){
+        pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
+        update_PWM_2 = true;
+    }
+}
 // PWM interrupt service routine - Fan 1
-void on_pwm_wrap_1() {
-    //printf("in pwm wrap");
-    // Clear the interrupt flag that brought us here
-    pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+// void on_pwm_wrap_1() {
+//     //printf("in pwm wrap");
+//     // Clear the interrupt flag that brought us here
+//     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+//     update_PWM_1 = true;
+//     // Update duty cycle
+//     //sleep_ms(20);
+// }
 
-    // Update duty cycle
-    if (control_1!=old_control_1) {
-        //printf("change duty cycle");
-        old_control_1 = control_1 ;
-        pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
-    }
-    error_1 = measured_temp - desired_temp;
-    control_1 = (int)(proportional_gain*error_1);
-    prev_error_1 = error_1;
-    printf("Error: %f\n", error_1);
-    printf("Control: %i\n",control_1);
-    if (control_1 < 0) {
-        control_1 = 0;
-    }
-    else if (control_1 > 1500){
-        control_1 = 1500;
-    }
-    //sleep_ms(20);
-}
-
-// PWM interrupt service routine - Fan 2
-void on_pwm_wrap_2() {
-    //printf("in pwm wrap");
-    // Clear the interrupt flag that brought us here
-    pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
-
-    // Update duty cycle
-    if (control_2!=old_control_2) {
-        //printf("change duty cycle");
-        old_control_2 = control_2 ;
-       // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
-        pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
-    }
-    error_2 = measured_temp - desired_temp;
-    control_2 = (int)(proportional_gain*error_2);
-    prev_error_2 = error_2;
-    // printf("Error: %f\n", error_2);
-    // printf("Control: %i\n",control_2);
-    if (control_2 < 0) {
-        control_2 = 0;
-    }
-    else if (control_2 > 1500){
-        control_2 = 1500;
-    }
-    //sleep_ms(20);
-}
+// // PWM interrupt service routine - Fan 2
+// void on_pwm_wrap_2() {
+//     //printf("in pwm wrap");
+//     // Clear the interrupt flag that brought us here
+//     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
+//     update_PWM_2 = true;
+//     //sleep_ms(20);
+// }
 
 // Temperature polling thread
 static PT_THREAD (protothread_temp(struct pt *pt)){
     PT_BEGIN(pt);
-    sensor.read_temperature(&measured_temp);
+    float temp_1_val;
+    float temp_2_val;
+    float temp_3_val;
+    bool useOne = true;
+    bool useTwo = true;
+    bool useThree = true;
+    while(1){
+        //Temp sensor 1
+        sensor_1.read_temperature(&temp_1_val);
 
-    if (!sensor.read_temperature(&measured_temp)) {
-        printf("Error: Sensor failed to read temperature\n");
+        if (!sensor_1.read_temperature(&temp_1_val)) {
+            printf("Error: Sensor 1 failed to read temperature\n");
+            useOne = false;
+        }
+        //printf("Temperature: %.2f\n\n", temp_1_val);
+        set_temp_1_value(&temp_1_val);
+
+        //Temp sensor 2
+        sensor_2.read_temperature(&temp_2_val);
+        if (!sensor_2.read_temperature(&temp_2_val)) {
+            printf("Error: Sensor 2 failed to read temperature\n");
+            useTwo = false;
+        }
+        //printf("Temperature: %.2f\n\n", temp_2_val);
+        set_temp_2_value(&temp_2_val);
+
+        //Temp Sensor 3
+        sensor_3.read_temperature(&temp_3_val);
+        if (!sensor_3.read_temperature(&temp_3_val)) {
+            printf("Error: Sensor 3 failed to read temperature\n");
+            useThree = false;
+        }
+       // printf("Temperature: %.2f\n\n", temp_3_val);
+        set_temp_3_value(&temp_3_val);
+        if(useOne && useTwo && useThree){
+            measured_temp = (temp_1_val + temp_2_val + temp_3_val)/3;
+        }
+        else if(useOne && useTwo){
+            measured_temp = (temp_1_val+temp_2_val)/2;
+        }
+        else if(useOne && useThree){
+            measured_temp = (temp_1_val+temp_3_val)/2;
+        }
+        else if(useTwo && useThree){
+            measured_temp = (temp_2_val+temp_3_val)/2;
+        }
+        else if(useOne){
+            measured_temp = temp_1_val;
+        }
+        else if(useTwo){
+            measured_temp = temp_2_val;
+        }
+        else{
+            measured_temp = temp_3_val;
+        }
+        if(update_PWM_1){
+            if (control_1!=old_control_1) {
+                //printf("change duty cycle");
+                old_control_1 = control_1 ;
+                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+            }
+            error_1 = measured_temp - desired_temp;
+            control_1 = (int)(proportional_gain*error_1);
+            prev_error_1 = error_1;
+            // printf("Error: %f\n", error_1);
+            // printf("Control: %i\n",control_1);
+            if (control_1 < 0) {
+                control_1 = 0;
+            }
+            else if (control_1 > 1500){
+                control_1 = 1500;
+            }
+            update_PWM_1 = false;
+        }
+        if(update_PWM_2){
+            // Update duty cycle
+            if (control_2!=old_control_2) {
+                //printf("change duty cycle");
+                old_control_2 = control_2 ;
+            // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
+                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
+            }
+            error_2 = measured_temp - desired_temp;
+            control_2 = (int)(proportional_gain*error_2);
+            prev_error_2 = error_2;
+            // printf("Error: %f\n", error_2);
+            // printf("Control: %i\n",control_2);
+            if (control_2 < 0) {
+                control_2 = 0;
+            }
+            else if (control_2 > 1500){
+                control_2 = 1500;
+            }
+            update_PWM_2 = false;
+        }
     }
-    printf("Temperature: %.2f\n\n", measured_temp);
     PT_END(pt);
 }
 
@@ -220,85 +294,102 @@ int main() {
     set_temp_3_value(&temp_3_val);
     set_pwm_1_value(&pwm_1_val);
     set_pwm_2_value(&pwm_2_val);
+
     sleep_ms(10000);
-    while(1)
-    {
-        sleep_ms(1000);
-        // temp_1_val = 100.0;
-        set_temp_1_value(&temp_1_val);
-        temp_1_val = (int)(temp_1_val + 1) % 45;
-    }
+    // while(1)
+    // {
+    //     sleep_ms(1000);
+    //     // temp_1_val = 100.0;
+    //     set_temp_1_value(&temp_1_val);
+    //     temp_1_val = (int)(temp_1_val + 1) % 45;
+    // }
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
-//     i2c_init(I2C_CHAN_0, I2C_BAUD_RATE) ;
-//     gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
-//     gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
-//     gpio_pull_up(I2C0_SDA);
-//     gpio_pull_up(I2C0_SCL);
+    i2c_init(I2C_CHAN_0, 400 * 1000) ;
+    gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C) ;
+    gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C) ;
+    gpio_pull_up(I2C0_SDA);
+    gpio_pull_up(I2C0_SCL);
 
     // while (!tud_cdc_connected()) {
     //     sleep_ms(500);
     // }
     // printf("Connected\n");
 
-//     while (!sensor.begin()) {
-//         printf("Error: Sensor failed to initialize\n");
-//         sleep_ms(50);
-//     }
-
+    while (!sensor_1.begin()) {
+        printf("Error: Sensor 1 failed to initialize\n");
+        sleep_ms(50);
+    }
+    
+    // while(!sensor_2.begin(0x77)){
+    //     printf("Error: Sensor 2 failed to initialize\n");
+    //     sleep_ms(50);
+    // }
 
 //     // printf("Left Sensor Begin Loop");
 
-//     // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
-//     // gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
-//     // gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
+    // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
+    // gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
+    // gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
 
+    // gpio_pull_up(I2C1_SCL);
+    // gpio_pull_up(I2C1_SDA);
 
+    // while(!sensor_3.begin()){
+    //     printf("Error: Sensor 3 failed to initialize\n");
+    //     sleep_ms(50);
+    // }
 
 //     ////////////////////////////////////////////////////////////////////////
 //     ///////////////////////// PWM CONFIGURATION ////////////////////////////
 //     ////////////////////////////////////////////////////////////////////////
-// // Tell GPIO PWM_OUT that it is allocated to the PWM
-//     gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
-//     gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
-//     // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
-//     slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
-//     slice_num_2 = pwm_gpio_to_slice_num(PWM_OUT_2);
-//     // Mask our slice's IRQ output into the PWM block's single interrupt line,
-//     // and register our interrupt handler
-//     pwm_clear_irq(slice_num_1);
-//     pwm_clear_irq(slice_num_2);
-//     pwm_set_irq_enabled(slice_num_1, true);
-//     pwm_set_irq_enabled(slice_num_2, true);
-//    // irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
-//     irq_add_shared_handler(PWM_IRQ_WRAP, on_pwm_wrap_1, 1);
-//     irq_add_shared_handler(PWM_IRQ_WRAP, on_pwm_wrap_2, 0);
-//     irq_set_enabled(PWM_IRQ_WRAP, true);
-//     // This section configures the period of the PWM signals
-//     pwm_set_wrap(slice_num_1, WRAPVAL) ;
-//     pwm_set_wrap(slice_num_2, WRAPVAL);
-//     pwm_set_clkdiv(slice_num_1, CLKDIV) ;
-//     pwm_set_clkdiv(slice_num_2, CLKDIV) ; 
+// Tell GPIO PWM_OUT that it is allocated to the PWM
+    gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
+    gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
+    // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
+    slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
+    slice_num_2 = pwm_gpio_to_slice_num(PWM_OUT_2);
+    // Mask our slice's IRQ output into the PWM block's single interrupt line,
+    // and register our interrupt handler
+    pwm_clear_irq(slice_num_1);
+    pwm_clear_irq(slice_num_2);
+    pwm_set_irq_enabled(slice_num_1, true);
+    pwm_set_irq_enabled(slice_num_2, true);
+    irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
+    irq_set_enabled(PWM_IRQ_WRAP, true);
+    // This section configures the period of the PWM signals
+    pwm_set_wrap(slice_num_1, WRAPVAL) ;
+    pwm_set_wrap(slice_num_2, WRAPVAL);
+    pwm_set_clkdiv(slice_num_1, CLKDIV) ;
+    pwm_set_clkdiv(slice_num_2, CLKDIV) ; 
 
-//     pwm_set_output_polarity(slice_num_1, 1, 1);
-//     pwm_set_output_polarity(slice_num_2, 1, 1);
-//     // This sets duty cycle
-//     pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 3125);
-//     pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 3125);
-//     // Start the channel
-//     pwm_set_mask_enabled((1u << slice_num_1));
-//     pwm_set_mask_enabled((1u << slice_num_2));
+    pwm_set_output_polarity(slice_num_1, 1, 1);
+    pwm_set_output_polarity(slice_num_2, 1, 1);
+    // This sets duty cycle
+    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 3125);
+    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 3125);
+    // Start the channel
+    pwm_set_mask_enabled((1u << slice_num_1));
+    pwm_set_mask_enabled((1u << slice_num_2));
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////////// ROCK AND ROLL ////////////////////////////
     ////////////////////////////////////////////////////////////////////////
     // // start core 1 
     // multicore_reset_core1();
     // multicore_launch_core1(core1_entry);
+    // while(1){
+    //     sensor_1.read_temperature(&temp_1_val);
 
+    //     if (!sensor_1.read_temperature(&temp_1_val)) {
+    //         printf("Error: Sensor failed to read temperature\n");
+    //     }
+    //     printf("Temperature: %.2f\n\n", temp_1_val);
+    //     set_temp_1_value(&temp_1_val);
+    // }
 
-    // // start core 0
-    // pt_add_thread(protothread_temp) ;
-    // pt_schedule_start ;
+    // start core 0
+    pt_add_thread(protothread_temp) ;
+    pt_schedule_start ;
    
 
 }
