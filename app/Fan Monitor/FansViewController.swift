@@ -9,8 +9,10 @@ import UIKit
 
 class FansViewController: UIViewController {
 
+    @IBOutlet weak var settingsButton: UIBarButtonItem!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var modeLabel: UILabel!
+    @IBOutlet weak var modeSwitch: UISwitch!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,11 +23,59 @@ class FansViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.dataSource = self
         tableView.delegate = self
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(updateFan1(_:)), name: .fan1DidUpdate, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateFan2(_:)), name: .fan2DidUpdate, object: nil)
     }
     
     
     @IBAction func modeSwitchTapped(_ sender: UISwitch) {
         modeLabel.text = sender.isOn ? "Current mode: Controller" : "Current mode: Manual"
+    }
+    
+    @IBAction func settingsButtonTapped(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let sheetVC: UIViewController
+        
+        if modeSwitch.isOn {
+            sheetVC = storyboard.instantiateViewController(withIdentifier: "ControllerSettingsSheet")
+            
+            if let sheet = sheetVC.sheetPresentationController {
+                sheet.detents = [
+                        .custom { context in
+                            return 250
+                        }
+                    ]
+                sheet.prefersGrabberVisible = true
+                sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+                sheet.preferredCornerRadius = 20
+            }
+        } else {
+            sheetVC = storyboard.instantiateViewController(withIdentifier: "ManualSettingsSheet")
+
+            if let sheet = sheetVC.sheetPresentationController {
+                sheet.detents = [
+                        .custom { context in
+                            return 200
+                        }
+                    ]
+                sheet.prefersGrabberVisible = true
+                sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+                sheet.preferredCornerRadius = 20
+            }
+        }
+        
+        sheetVC.modalPresentationStyle = .pageSheet
+        present(sheetVC, animated: true)
+    }
+    
+    
+    @objc func updateFan1(_ notification: Notification) {
+        
+    }
+    
+    @objc func updateFan2(_ notification: Notification) {
+        
     }
     
 }
