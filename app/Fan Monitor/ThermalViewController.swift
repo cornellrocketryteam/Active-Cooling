@@ -43,19 +43,26 @@ class ThermalViewController: UIViewController {
         guard let str = notification.object as? String,
               let temp = Float(str) else { return }
         
+        var indexToUpdate: Int?
+        
         switch notification.name {
         case .temp1DidUpdate:
             temps[0] = temp
+            indexToUpdate = 0
         case .temp2DidUpdate:
             temps[1] = temp
+            indexToUpdate = 1
         case .temp3DidUpdate:
             temps[2] = temp
+            indexToUpdate = 2
         default:
             return
         }
 
         DispatchQueue.main.async {
-            self.tableView.reloadData()
+            if let index = indexToUpdate {
+                self.tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .none)
+            }
         }
     }
     
@@ -127,23 +134,19 @@ extension ThermalViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 4
+        return 3
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ThermalCell", for: indexPath) as? ThermalTableViewCell else {
             return UITableViewCell()
         }
-        if (indexPath.row < 3) {
-            cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
-            let displayTemp = selectedUnit == .fahrenheit ? (temps[indexPath.row] * 9.0 / 5.0 + 32) : temps[indexPath.row]
-            cell.update(with: displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
-            fillStationView.update(for: indexPath.row + 1, value: displayTemp)
-            
-        } else {
-            cell.titleLabel.text = "Thermal Camera"
-        }
-
+        
+        cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
+        let displayTemp = selectedUnit == .fahrenheit ? (temps[indexPath.row] * 9.0 / 5.0 + 32) : temps[indexPath.row]
+        cell.update(with: displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
+        fillStationView.update(for: indexPath.row + 1, value: displayTemp)
+        
         return cell
     }
 }
