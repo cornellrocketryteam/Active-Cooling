@@ -15,12 +15,8 @@ class StatsTableViewCell: UITableViewCell {
     @IBOutlet weak var currentValueLabel: UILabel!
     @IBOutlet weak var chartContainerView: UIView!
     
-    private var chartHost: UIHostingController<ChartWrapperView>?
-    private var chartData: [Double] = []
-    
+    private var chartData: [Float] = []
     private var chartModel = ChartDataModel()
-    
-    private var dataBinding: Binding<[Double]>!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -31,22 +27,9 @@ class StatsTableViewCell: UITableViewCell {
         contentView.backgroundColor = .white
         backgroundColor = .clear
         
-//        chartData = []
-//        dataBinding = Binding(
-//            get: { self.chartData },
-//            set: { self.chartData = $0 }
-//        )
-//
-//        
-////        let sampleData: [Double] = [42, 44, 43, 45, 46]
-//        let chartView = ChartWrapperView(data: dataBinding)
-//        let hosting = UIHostingController(rootView: chartView)
-        
-        let chartView = ChartWrapperView(model: chartModel)
+        let chartView = TemperatureChartView(model: chartModel, color: .blue)
         let hosting = UIHostingController(rootView: chartView)
 
-
-        chartHost = hosting
         guard let hostView = hosting.view else { return }
 
         hostView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,15 +43,9 @@ class StatsTableViewCell: UITableViewCell {
         ])
     }
     
-    func update(with temperature: Float) {
-        let value = Double(temperature)
-
-//        currentValueLabel.text = String(format: "%.1f °C", value)
-
-        chartModel.data.append(value)
-        if chartModel.data.count > 6 {
-            chartModel.data.removeFirst()
-        }
+    func update(with temperature: Float, unit: String) {
+        chartModel.append(temperature)
+        currentValueLabel.attributedText = formattedTemperatureString(temperature, unit: unit)
     }
     
     override func layoutSubviews() {
@@ -76,11 +53,26 @@ class StatsTableViewCell: UITableViewCell {
 
         contentView.frame = contentView.frame.inset(by: UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0))
     }
+    
+    func formattedTemperatureString(_ value: Float, unit: String) -> NSAttributedString {
+        let fullString = String(format: "%.1f %@", value, unit)
+        let attributed = NSMutableAttributedString(string: fullString)
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
+        let numberString = String(format: "%.1f", value)
 
-        // Configure the view for the selected state
+        if let numberRange = fullString.range(of: numberString) {
+            let nsNumberRange = NSRange(numberRange, in: fullString)
+            attributed.addAttribute(.font, value: UIFont.monospacedDigitSystemFont(ofSize: 28, weight: .semibold), range: nsNumberRange)
+        }
+
+        if let unitRange = fullString.range(of: unit) {
+            let nsUnitRange = NSRange(unitRange, in: fullString)
+            attributed.addAttributes([
+                .font: UIFont.boldSystemFont(ofSize: 16),
+                .foregroundColor: UIColor.gray
+            ], range: nsUnitRange)
+        }
+
+        return attributed
     }
-
 }

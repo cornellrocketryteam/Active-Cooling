@@ -13,6 +13,7 @@ enum UnitType {
 
 class ThermalViewController: UIViewController {
 
+    @IBOutlet weak var fillStationView: FillStationView!
     @IBOutlet weak var settingsButton: UIBarButtonItem!
     @IBOutlet weak var tableView: UITableView!
     
@@ -100,7 +101,6 @@ extension ThermalViewController: UITableViewDelegate {
             navigationController?.pushViewController(detailVC, animated: true)
         }
     }
-
 }
 
 extension ThermalViewController: UITableViewDataSource {
@@ -136,40 +136,14 @@ extension ThermalViewController: UITableViewDataSource {
         }
         if (indexPath.row < 3) {
             cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
-            print("in here here here")
             let displayTemp = selectedUnit == .fahrenheit ? (temps[indexPath.row] * 9.0 / 5.0 + 32) : temps[indexPath.row]
-            cell.currentValueLabel.attributedText = formattedTemperatureString(displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
-            cell.update(with: displayTemp)
+            cell.update(with: displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
+            fillStationView.update(for: indexPath.row + 1, value: displayTemp)
             
         } else {
             cell.titleLabel.text = "Thermal Camera"
         }
-        
 
         return cell
     }
-    
-    func formattedTemperatureString(_ value: Float, unit: String) -> NSAttributedString {
-        let fullString = String(format: "%.1f %@", value, unit)
-        let attributed = NSMutableAttributedString(string: fullString)
-
-        let numberString = String(format: "%.1f", value)
-
-        if let numberRange = fullString.range(of: numberString) {
-            let nsNumberRange = NSRange(numberRange, in: fullString)
-            attributed.addAttribute(.font, value: UIFont.monospacedDigitSystemFont(ofSize: 28, weight: .semibold), range: nsNumberRange)
-        }
-
-        if let unitRange = fullString.range(of: unit) {
-            let nsUnitRange = NSRange(unitRange, in: fullString)
-            attributed.addAttributes([
-                .font: UIFont.boldSystemFont(ofSize: 16),
-                .foregroundColor: UIColor.gray
-            ], range: nsUnitRange)
-        }
-
-        return attributed
-    }
-
-
 }

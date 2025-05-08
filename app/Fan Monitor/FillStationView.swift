@@ -15,6 +15,8 @@ enum Component {
 
 class FillStationView: UIView {
 
+    private var tempSensorButtons: [Int: UIButton] = [:]
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -30,7 +32,13 @@ class FillStationView: UIView {
         layer.cornerRadius = 16
         drawBoxLayout()
     }
-
+    
+    func update(for tempSensor: Int, value: Float) {
+        if let button = tempSensorButtons[tempSensor] {
+            button.setTitle(String(format: "%.0f°", value), for: .normal)
+        }
+    }
+    
     private func drawBoxLayout() {
         // Box outline
         let boxLayer = CAShapeLayer()
@@ -142,35 +150,9 @@ class FillStationView: UIView {
             label: "F2"
         )
         
-        // Temp Sensor 1
-        addComponent(
-            component: .TempSensor,
-            x: fixedBoxFrame.minX + 145,
-            y: 140,
-            width: 50,
-            height: 30,
-            label: "42°"
-        )
-        
-        // Temp Sensor 2
-        addComponent(
-            component: .TempSensor,
-            x: fixedBoxFrame.minX + 80,
-            y: 245,
-            width: 50,
-            height: 30,
-            label: "42°"
-        )
-        
-        // Temp Sensor 3
-        addComponent(
-            component: .TempSensor,
-            x: fixedBoxFrame.minX + 40,
-            y: 40,
-            width: 50,
-            height: 30,
-            label: "42°"
-        )
+        addTempSensor(index: 1, x: fixedBoxFrame.minX + 145, y: 140)
+        addTempSensor(index: 2, x: fixedBoxFrame.minX + 80, y: 245)
+        addTempSensor(index: 3, x: fixedBoxFrame.minX + 40, y: 40)
         
     }
 
@@ -219,4 +201,24 @@ class FillStationView: UIView {
             addSubview(button)
         }
     }
+    
+    private func addTempSensor(index: Int, x: CGFloat, y: CGFloat) {
+        let button = UIButton(type: .system)
+        button.frame = CGRect(x: x, y: y, width: 50, height: 30)
+        button.backgroundColor = .clear
+        button.setTitle("42°", for: .normal)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .bold)
+
+        if let image = UIImage(systemName: "thermometer.variable") {
+            button.setImage(image, for: .normal)
+            button.tintColor = .black
+            button.semanticContentAttribute = .forceLeftToRight
+        }
+
+        tempSensorButtons[index] = button
+        addSubview(button)
+    }
+    
+//    private func addFan(index)
 }

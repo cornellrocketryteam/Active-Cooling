@@ -229,6 +229,7 @@
                         <barButtonItem key="rightBarButtonItem" image="ellipsis.circle" catalog="system" style="plain" id="gc5-fP-Vpp"/>
                     </navigationItem>
                     <connections>
+                        <outlet property="fillStationView" destination="Wav-CA-PS0" id="vKZ-lh-5TM"/>
                         <outlet property="settingsButton" destination="gc5-fP-Vpp" id="W4A-3O-LIZ"/>
                         <outlet property="tableView" destination="zqb-5R-Bxc" id="aXf-sl-Aiq"/>
                     </connections>
