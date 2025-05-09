@@ -25,7 +25,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     let Temp3_Char_UUID = CBUUID(string: "00000004-0000-0715-2006-853A52A41A44")
     let Fan1_Char_UUID = CBUUID(string: "00000005-0000-0715-2006-853A52A41A44")
     let Fan2_Char_UUID = CBUUID(string: "00000006-0000-0715-2006-853A52A41A44")
-    let Kp_Char_UUID = CBUUID(string: "00000007-0000-0715-2006-853A52A41A44")
+    let Mode_Char_UUID = CBUUID(string: "00000007-0000-0715-2006-853A52A41A44")
+    let Kp_Char_UUID = CBUUID(string: "00000008-0000-0715-2006-853A52A41A44")
     
     private var temp1Char: CBCharacteristic?
     private var temp2Char: CBCharacteristic?
@@ -33,6 +34,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     var fan1Char: CBCharacteristic?
     var fan2Char: CBCharacteristic?
+    var modeChar: CBCharacteristic?
     var kpChar: CBCharacteristic?
     
     private override init() {

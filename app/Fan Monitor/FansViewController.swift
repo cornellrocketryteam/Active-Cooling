@@ -14,6 +14,8 @@ class FansViewController: UIViewController {
     @IBOutlet weak var modeLabel: UILabel!
     @IBOutlet weak var modeSwitch: UISwitch!
     
+    var currentPWMs: [Int32] = [0, 0]
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -31,6 +33,7 @@ class FansViewController: UIViewController {
     
     @IBAction func modeSwitchTapped(_ sender: UISwitch) {
         modeLabel.text = sender.isOn ? "Current mode: Controller" : "Current mode: Manual"
+        BluetoothManager.shared.write(to: BluetoothManager.shared.modeChar, value: sender.isOn ? "1" : "0")
     }
     
     @IBAction func settingsButtonTapped(_ sender: Any) {
@@ -42,10 +45,10 @@ class FansViewController: UIViewController {
             
             if let sheet = sheetVC.sheetPresentationController {
                 sheet.detents = [
-                        .custom { context in
-                            return 150
-                        }
-                    ]
+                    .custom { context in
+                        return 150
+                    }
+                ]
                 sheet.prefersGrabberVisible = true
                 sheet.prefersScrollingExpandsWhenScrolledToEdge = false
                 sheet.preferredCornerRadius = 20
@@ -55,10 +58,10 @@ class FansViewController: UIViewController {
 
             if let sheet = sheetVC.sheetPresentationController {
                 sheet.detents = [
-                        .custom { context in
-                            return 200
-                        }
-                    ]
+                    .custom { context in
+                        return 200
+                    }
+                ]
                 sheet.prefersGrabberVisible = true
                 sheet.prefersScrollingExpandsWhenScrolledToEdge = false
                 sheet.preferredCornerRadius = 20
@@ -71,11 +74,19 @@ class FansViewController: UIViewController {
     
     
     @objc func updateFan1(_ notification: Notification) {
-        
+        guard let str = notification.object as? String,
+              let pwm = Int32(str) else { return }
+        print("update fan 1")
+        currentPWMs[0] = pwm
+        tableView.reloadData()
     }
     
     @objc func updateFan2(_ notification: Notification) {
-        
+        guard let str = notification.object as? String,
+              let pwm = Int32(str) else { return }
+        print("update fan 2")
+        currentPWMs[1] = pwm
+        tableView.reloadData()
     }
     
 }
@@ -86,10 +97,6 @@ extension FansViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-//        if let detailVC = storyboard.instantiateViewController(withIdentifier: "ThermalDetailViewController") as? ThermalDetailViewController {
-//            navigationController?.pushViewController(detailVC, animated: true)
-//        }
     }
 }
 
@@ -126,6 +133,7 @@ extension FansViewController: UITableViewDataSource {
         }
         
         cell.titleLabel.text = "Fan \(indexPath.row + 1)"
+        cell.currentValueLabel.text = String(currentPWMs[indexPath.row])
         
         return cell
     }
