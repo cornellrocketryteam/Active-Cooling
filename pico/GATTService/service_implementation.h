@@ -94,9 +94,6 @@ char char_pwm_1[] = "PWM 1 Duty Cycle" ;
 char char_pwm_2[] = "PWM 2 Duty Cycle" ;
 char char_mode[] = "Mode" ; 
 
-// Protothreads semaphore
-struct pt_sem BLUETOOTH_READY ;
-
 // Callback functions for ATT notifications on characteristics
 static void characteristic_temp_1_callback(void * context){
 	// Associate the void pointer input with our custom service object
@@ -224,24 +221,18 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		memcpy(service_object.pwm_1_value, buffer, buffer_size);
 		service_object.pwm_1_value[buffer_size] = '\0';  // Null-terminate
 	}
-	// Alert the application of a bluetooth RX
-	PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
 
 	// Write value directly to PWM 2 characteristic
 	if (attribute_handle == service_object.pwm_2_handle) {
 		memcpy(service_object.pwm_2_value, buffer, buffer_size);
 		service_object.pwm_2_value[buffer_size] = '\0';  // Null-terminate
 	}
-	// Alert the application of a bluetooth RX
-	PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
 
 	// Write value directly to mode characteristic
 	if (attribute_handle == service_object.mode_handle) {
 		memcpy(service_object.mode_value, buffer, buffer_size);
 		service_object.mode_value[buffer_size] = '\0';  // Null-terminate
 	}
-	// Alert the application of a bluetooth RX
-	PT_SEM_SAFE_SIGNAL(pt, &BLUETOOTH_READY) ;
 
 	// Enable/disable notifications - Temp 1 
     if (attribute_handle == service_object.temp_1_client_configuration_handle){
@@ -282,8 +273,6 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 
 void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, char * pwm_2_ptr, char * mode_ptr)
 {
-	// Initialize the semaphore
-	PT_SEM_SAFE_INIT(&BLUETOOTH_READY, 0) ;
 
     // Pointer to our service object
 	GYATT_DB * instance = &service_object ;
@@ -434,4 +423,5 @@ void set_All(float * temp_1, float * temp_2, float * temp_3, int32_t * pwm_1, in
 	set_temp_3_value(temp_3);
 	set_pwm_1_value(pwm_1);
 	set_pwm_2_value(pwm_2);
+	set_mode_value(mode);
 }

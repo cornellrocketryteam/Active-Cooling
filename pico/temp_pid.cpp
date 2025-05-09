@@ -210,7 +210,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
 
             if (mode == 0){
                 // TODO: update by received value
-                PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
                 control_1 = atof(pwm_1_bytes);
             } else {
                 if (control_1!=old_control_1) {
@@ -236,7 +235,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
         if(update_PWM_2){
             if (mode == 0){
-               PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
                control_2 = atof(pwm_2_bytes);
             } else {
                 // Update duty cycle
@@ -271,8 +269,6 @@ static PT_THREAD (protothread_ble(struct pt *pt))
     PT_BEGIN(pt);
 
     while(1) {
-        // Wait for a bluetooth event (signaled by bluetooth write callback)
-        PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY) ;
 
         uint8_t received_mode = std::atoi(mode_bytes);
         printf(mode_bytes);
