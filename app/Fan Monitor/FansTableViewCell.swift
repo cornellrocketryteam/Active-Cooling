@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 class FansTableViewCell: UITableViewCell {
 
@@ -15,6 +16,9 @@ class FansTableViewCell: UITableViewCell {
     @IBOutlet weak var currentTimeLabel: UILabel!
     @IBOutlet weak var chartContainerView: UIView!
     
+    private var chartData: [Float] = []
+    private var hostingController: UIHostingController<FansChartView>?
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         
@@ -23,6 +27,30 @@ class FansTableViewCell: UITableViewCell {
         
         contentView.backgroundColor = .white
         backgroundColor = .clear
+    }
+    
+    func update(model: FansChartDataModel, pwm: Int32) {
+        currentValueLabel.text = String(pwm)
+
+        if let hosting = hostingController {
+            print("has hosting, update model")
+            hosting.rootView = FansChartView(model: model, color: .blue)
+        } else {
+            // First-time creation
+            let chartView = FansChartView(model: model, color: .blue)
+            let hosting = UIHostingController(rootView: chartView)
+            hosting.view.translatesAutoresizingMaskIntoConstraints = false
+            chartContainerView.addSubview(hosting.view)
+
+            NSLayoutConstraint.activate([
+                hosting.view.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
+                hosting.view.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),
+                hosting.view.trailingAnchor.constraint(equalTo: chartContainerView.trailingAnchor),
+                hosting.view.bottomAnchor.constraint(equalTo: chartContainerView.bottomAnchor)
+            ])
+
+            hostingController = hosting
+        }
     }
     
     override func layoutSubviews() {

@@ -80,10 +80,12 @@ class ThermalViewController: UIViewController {
             UIAction(title: "Celsius", image: UIImage(systemName: "degreesign.celsius"), state: selectedUnit == .celsius ? .on: .off) { _ in
                 self.selectedUnit = .celsius
                 self.setupSettingsMenu()
+                self.tableView.reloadData()
             },
             UIAction(title: "Fahrenheit", image: UIImage(systemName: "degreesign.fahrenheit"), state: selectedUnit == .fahrenheit ? .on: .off) { _ in
                 self.selectedUnit = .fahrenheit
                 self.setupSettingsMenu()
+                self.tableView.reloadData()
             },
         ])
         

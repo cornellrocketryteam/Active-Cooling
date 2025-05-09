@@ -27,6 +27,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     let Fan2_Char_UUID = CBUUID(string: "00000006-0000-0715-2006-853A52A41A44")
     let Mode_Char_UUID = CBUUID(string: "00000007-0000-0715-2006-853A52A41A44")
     let Kp_Char_UUID = CBUUID(string: "00000008-0000-0715-2006-853A52A41A44")
+    let DesiredTemp_Char_UUID = CBUUID(string: "00000009-0000-0715-2006-853A52A41A44")
+
     
     private var temp1Char: CBCharacteristic?
     private var temp2Char: CBCharacteristic?
@@ -36,6 +38,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     var fan2Char: CBCharacteristic?
     var modeChar: CBCharacteristic?
     var kpChar: CBCharacteristic?
+    var desiredTempChar: CBCharacteristic?
     
     private override init() {
         super.init()
@@ -164,6 +167,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
                 kpChar = characteristic
             case Mode_Char_UUID:
                 modeChar = characteristic
+            case DesiredTemp_Char_UUID:
+                desiredTempChar = characteristic
             default:
                 print("Unknown characteristic: \(characteristic.uuid)")
             }
@@ -186,7 +191,6 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         case Fan2_Char_UUID:
             NotificationCenter.default.post(name: .fan2DidUpdate, object: stringValue)
         case Temp1_Char_UUID:
-            print("Temp 1")
             NotificationCenter.default.post(name: .temp1DidUpdate, object: stringValue)
         case Temp2_Char_UUID:
             NotificationCenter.default.post(name: .temp2DidUpdate, object: stringValue)
