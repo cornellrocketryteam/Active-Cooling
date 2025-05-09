@@ -160,6 +160,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             case Temp3_Char_UUID:
                 temp3Char = characteristic
                 peripheral.setNotifyValue(true, for: characteristic)
+            case Mode_Char_UUID:
+                modeChar = characteristic
             default:
                 print("Unknown characteristic: \(characteristic.uuid)")
             }
