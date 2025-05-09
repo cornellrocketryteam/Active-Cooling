@@ -16,7 +16,7 @@ class ThermalTableViewCell: UITableViewCell {
     @IBOutlet weak var chartContainerView: UIView!
     
     private var chartData: [Float] = []
-    private var chartModel = ThermalChartDataModel()
+    private var hostingController: UIHostingController<ThermalChartView>?
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -26,26 +26,29 @@ class ThermalTableViewCell: UITableViewCell {
         
         contentView.backgroundColor = .white
         backgroundColor = .clear
-        
-        let chartView = ThermalChartView(model: chartModel, color: .blue)
-        let hosting = UIHostingController(rootView: chartView)
-
-        guard let hostView = hosting.view else { return }
-
-        hostView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(hostView)
-
-        NSLayoutConstraint.activate([
-            hostView.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
-            hostView.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),
-            hostView.trailingAnchor.constraint(equalTo: chartContainerView.trailingAnchor),
-            hostView.bottomAnchor.constraint(equalTo: chartContainerView.bottomAnchor)
-        ])
     }
     
-    func update(with temperature: Float, unit: String) {
-        chartModel.append(temperature)
+    func update(model: ThermalChartDataModel, temperature: Float, unit: String) {
         currentValueLabel.attributedText = formattedTemperatureString(temperature, unit: unit)
+
+        if let hosting = hostingController {
+            hosting.rootView = ThermalChartView(model: model, color: .blue)
+        } else {
+            // First-time creation
+            let chartView = ThermalChartView(model: model, color: .blue)
+            let hosting = UIHostingController(rootView: chartView)
+            hosting.view.translatesAutoresizingMaskIntoConstraints = false
+            chartContainerView.addSubview(hosting.view)
+
+            NSLayoutConstraint.activate([
+                hosting.view.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
+                hosting.view.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),
+                hosting.view.trailingAnchor.constraint(equalTo: chartContainerView.trailingAnchor),
+                hosting.view.bottomAnchor.constraint(equalTo: chartContainerView.bottomAnchor)
+            ])
+
+            hostingController = hosting
+        }
     }
     
     override func layoutSubviews() {

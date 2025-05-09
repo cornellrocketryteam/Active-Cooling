@@ -22,6 +22,12 @@ class ThermalViewController: UIViewController {
     
     var currentTemps: [Float] = [0, 0, 0]
     
+    var chartModels: [ThermalChartDataModel] = [
+        ThermalChartDataModel(),
+        ThermalChartDataModel(),
+        ThermalChartDataModel()
+    ]
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -48,12 +54,15 @@ class ThermalViewController: UIViewController {
         switch notification.name {
         case .temp1DidUpdate:
             currentTemps[0] = temp
+            chartModels[0].append(temp)
             indexToUpdate = 0
         case .temp2DidUpdate:
             currentTemps[1] = temp
+            chartModels[1].append(temp)
             indexToUpdate = 1
         case .temp3DidUpdate:
             currentTemps[2] = temp
+            chartModels[2].append(temp)
             indexToUpdate = 2
         default:
             return
@@ -144,8 +153,13 @@ extension ThermalViewController: UITableViewDataSource {
         
         cell.titleLabel.text = "Thermometer \(indexPath.row + 1)"
         let displayTemp = selectedUnit == .fahrenheit ? (currentTemps[indexPath.row] * 9.0 / 5.0 + 32) : currentTemps[indexPath.row]
-        cell.update(with: displayTemp, unit: selectedUnit == .celsius ? "°C" : "°F")
         fillStationView.update(for: indexPath.row + 1, value: displayTemp)
+        
+        cell.update(
+            model: chartModels[indexPath.row],
+            temperature: displayTemp,
+            unit: selectedUnit == .celsius ? "°C" : "°F"
+        )
         
         return cell
     }

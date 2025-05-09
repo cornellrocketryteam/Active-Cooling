@@ -136,6 +136,10 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         // Print to console for debugging purposes
         print("Found \(characteristics.count) characteristics!")
         
+        for characteristic in characteristics {
+            print("Characteristic \(characteristic.uuid) properties: \(characteristic.properties)")
+        }
+        
         // For every characteristic found...
         for characteristic in characteristics {
             switch characteristic.uuid {
@@ -209,10 +213,13 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     // Called when app wants to send a message to peripheral
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        guard error == nil else {
-            print("Error discovering services: error")
+        if let error = error {
+            print("Error writing to characteristic: \(error.localizedDescription)")
             return
+        } else {
+            print("Message sent successfully to \(characteristic.uuid)")
         }
+        
         print("Message sent")
     }
 
@@ -223,6 +230,9 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             print("\(error.debugDescription)")
             return
         }
+        
+        print("Properties for \(characteristic.uuid): \(characteristic.properties)")
+
         
         // Store descriptors in a variable. Return if nonexistent.
         guard let descriptors = characteristic.descriptors else { return }
@@ -235,10 +245,15 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     func write(to characteristic: CBCharacteristic?, value: String) {
         guard let peripheral = currPeripheral,
-              let characteristic = characteristic else { return }
+              let characteristic = characteristic else {
+            print("errored")
+            return }
+        
+        print("IN HERE")
 
         if let data = value.data(using: .utf8) {
-            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            print("WRITING")
+            peripheral.writeValue(data, for: characteristic, type: .withoutResponse)
         }
     }
 }
