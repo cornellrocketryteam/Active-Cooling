@@ -51,7 +51,7 @@
 #define abs(a) ((a>0) ? a:-a)
 
 float proportional_gain = 100;
-float desired_temp = 23;
+float desired_temp = 20;
 float measured_temp ;
 
 // PWM wrap value and clock divide value
@@ -119,7 +119,7 @@ char temp_2_bytes[64];
 char temp_3_bytes[64];
 char pwm_1_bytes[64];
 char pwm_2_bytes[64];
-char mode_bytes[2];
+char mode_bytes[64];
 bool received_first = false; 
 
 bool getBit(uint16_t metadata, int position)
@@ -208,13 +208,13 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
             // Handle manual mode
             if (mode == 0){
                 control = atof(pwm_1_bytes);
-                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
+                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(control));
             } else {
                 if (control!=old_control) {
                     old_control = control;
-                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
+                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(control));
                 }
-                control = (int)(proportional_gain*error);
+                control = (int32_t)(proportional_gain*error);
                 // printf("Control: %i\n",control_1);
                 if (control < 0) {
                     control = 0;
@@ -230,13 +230,13 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
             // Handle manual mode
             if (mode == 0){
                 control = atof(pwm_2_bytes);
-                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
+                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(control));
             } else {
                 if (control!=old_control) {
                     old_control = control;
-                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
+                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(control));
                 }
-                control = (int)(proportional_gain*error);
+                control = (int32_t)(proportional_gain*error);
                 // printf("Control: %i\n",control_1);
                 if (control < 0) {
                     control = 0;
@@ -260,8 +260,8 @@ static PT_THREAD (protothread_ble(struct pt *pt))
 
     while(1) {
 
-        uint8_t received_mode = std::atoi(mode_bytes);
-        printf(mode_bytes);
+        uint8_t received_mode = atoi(mode_bytes);
+        //printf(mode_bytes);
         if (received_mode == 0) {
             mode = manual;
             printf("Changed to manual");
@@ -318,6 +318,8 @@ int main() {
     set_pwm_1_value(&pwm_1_val);
     set_pwm_2_value(&pwm_2_val);
 
+    //mode = controller;
+
     sleep_ms(10000);
     // while(1)
     // {
@@ -351,17 +353,17 @@ int main() {
 
 //     // printf("Left Sensor Begin Loop");
 
-    // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
-    // gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
-    // gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
+    i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
+    gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
+    gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
 
-    // gpio_pull_up(I2C1_SCL);
-    // gpio_pull_up(I2C1_SDA);
+    gpio_pull_up(I2C1_SCL);
+    gpio_pull_up(I2C1_SDA);
 
-    // while(!sensor_3.begin()){
-    //     printf("Error: Sensor 3 failed to initialize\n");
-    //     sleep_ms(50);
-    // }
+    while(!sensor_3.begin()){
+        printf("Error: Sensor 3 failed to initialize\n");
+        sleep_ms(50);
+    }
 
 //     ////////////////////////////////////////////////////////////////////////
 //     ///////////////////////// PWM CONFIGURATION ////////////////////////////
@@ -411,7 +413,7 @@ int main() {
     // }
 
     // start core 0
-    pt_add_thread(protothread_ble);
+    //pt_add_thread(protothread_ble);
     pt_add_thread(protothread_temp) ;
     pt_schedule_start ;
    
