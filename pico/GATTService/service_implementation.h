@@ -9,6 +9,8 @@ void (*external_pwm_1_callback)(uint32_t) = NULL;
 void (*external_pwm_2_callback)(uint32_t) = NULL;
 void (*external_mode_callback)(uint8_t) = NULL;
 void (*external_kp_callback)(float) = NULL;
+void (*external_desired_temp_callback)(float) = NULL;
+
 
 // Create a struct for managing this service
 typedef struct {
@@ -344,6 +346,21 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		}
 	}
 
+	if (attribute_handle == service_object.desired_temp_handle) {
+		memcpy(instance->desired_temp_value, buffer, max_copy_len);
+		instance->desired_temp_value[max_copy_len] = '\0';
+
+		char *endptr;
+		float parsed = strtof(instance->desired_temp_value, &endptr);
+
+		if (endptr == instance->desired_temp_value || *endptr != '\0') {
+			// printf("Invalid float for Kp: '%s'\n", instance->Kp_value);
+		} else {
+			// printf("CALLED EXTERNAL TEMP CALLBACK\n");
+			external_desired_temp_callback(parsed);
+		}
+	}
+
 
 	// Enable/disable notifications - Temp 1 
     if (attribute_handle == service_object.temp_1_client_configuration_handle){
@@ -382,6 +399,12 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
         service_object.Kp_client_configuration = little_endian_read_16(buffer, 0);
         service_object.con_handle = con_handle;
     }
+	// Enable/disable notifications - Desired temp
+    if (attribute_handle == service_object.desired_temp_client_configuration_handle){
+
+        service_object.desired_temp_client_configuration = little_endian_read_16(buffer, 0);
+        service_object.con_handle = con_handle;
+    }
 	return 0;
 
 }
@@ -389,9 +412,8 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 ////////////////////////////// USER API /////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, void (*pwm_1_callback)(uint32_t), char * pwm_2_ptr, void (*pwm_2_callback)(uint32_t), char * Kp_ptr, void (*kp_callback)(float), char * mode_ptr, void (*mode_callback)(uint8_t))
+void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, void (*pwm_1_callback)(uint32_t), char * pwm_2_ptr, void (*pwm_2_callback)(uint32_t), char * Kp_ptr, void (*kp_callback)(float), char * mode_ptr, void (*mode_callback)(uint8_t), char * desired_temp_ptr, void (*desired_temp_callback)(float))
 {
-
     // Pointer to our service object
 	GYATT_DB * instance = &service_object ;
 
@@ -403,11 +425,13 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 	instance->pwm_2_value = pwm_2_ptr ;
 	instance->Kp_value = Kp_ptr ;
 	instance->mode_value = mode_ptr ;
+	instance->desired_temp_value = desired_temp_ptr;
 
 	external_pwm_1_callback = pwm_1_callback;
 	external_pwm_2_callback = pwm_2_callback;
 	external_kp_callback = kp_callback;
 	external_mode_callback = mode_callback;
+	external_desired_temp_callback = desired_temp_callback;
 
     // Assign characteristic user description
 	instance->temp_1_user_description = char_temp_1;
@@ -417,6 +441,7 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 	instance->pwm_2_user_description = char_pwm_2 ;
 	instance->mode_user_description = char_mode ;
 	instance->Kp_user_description = char_Kp ;
+	instance->desired_temp_user_description = char_desired_temp;
 
     // Assigning Characteristic Handles
     instance->temp_1_handle=ATT_CHARACTERISTIC_00000002_0000_0715_2006_853A52A41A44_01_VALUE_HANDLE ;
@@ -433,6 +458,8 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 	instance->mode_user_description_handle=ATT_CHARACTERISTIC_00000007_0000_0715_2006_853A52A41A44_01_USER_DESCRIPTION_HANDLE;
 	instance->Kp_handle=ATT_CHARACTERISTIC_00000008_0000_0715_2006_853A52A41A44_01_VALUE_HANDLE;
 	instance->Kp_user_description_handle=ATT_CHARACTERISTIC_00000008_0000_0715_2006_853A52A41A44_01_USER_DESCRIPTION_HANDLE;
+	instance->desired_temp_handle=ATT_CHARACTERISTIC_00000009_0000_0715_2006_853A52A41A44_01_VALUE_HANDLE;
+	instance->desired_temp_user_description_handle=ATT_CHARACTERISTIC_00000009_0000_0715_2006_853A52A41A44_01_USER_DESCRIPTION_HANDLE;
 
     // Service Start and End Handles
     service_handler.start_handle = ATT_SERVICE_00000001_0000_0715_2006_853A52A41A44_START_HANDLE;

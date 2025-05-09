@@ -119,6 +119,7 @@ char pwm_1_bytes[64];
 char pwm_2_bytes[64];
 char kp_bytes[64];
 char mode_bytes[64];
+char desired_temp_bytes[64];
 bool received_first = false; 
 
 void update_pwm_1_callback(uint32_t new_pwm) {
@@ -146,7 +147,8 @@ void update_mode_callback(uint8_t new_mode) {
 }
 
 void update_desired_temp_callback(float new_temp) {
-
+    desired_temp = new_temp;
+    // printf("Updated new temp: %f\n", new_temp);
 }
 
 bool getBit(uint16_t metadata, int position)
@@ -298,7 +300,7 @@ int main() {
     att_server_init(profile_data, NULL, NULL);
 
     // TODO: update definition in service_implementation.h to reflect additional argument
-    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, update_pwm_1_callback, pwm_2_bytes, update_pwm_2_callback, kp_bytes, update_kp_callback, mode_bytes, update_mode_callback);
+    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, update_pwm_1_callback, pwm_2_bytes, update_pwm_2_callback, kp_bytes, update_kp_callback, mode_bytes, update_mode_callback, desired_temp_bytes, update_desired_temp_callback);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
