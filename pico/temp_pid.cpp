@@ -210,6 +210,8 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
 
             if (mode == 0){
                 // TODO: update by received value
+                PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
+                control_1 = atof(pwm_1_bytes);
             } else {
                 if (control_1!=old_control_1) {
                     //printf("change duty cycle");
@@ -234,7 +236,8 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
         if(update_PWM_2){
             if (mode == 0){
-                // TODO: update by received value
+               PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
+               control_2 = atof(pwm_2_bytes);
             } else {
                 // Update duty cycle
                 if (control_2!=old_control_2) {
@@ -272,10 +275,13 @@ static PT_THREAD (protothread_ble(struct pt *pt))
         PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY) ;
 
         uint8_t received_mode = std::atoi(mode_bytes);
+        printf(mode_bytes);
         if (received_mode == 0) {
             mode = manual;
+            printf("Changed to manual");
         } else if (received_mode == 1){
             mode = controller;
+            printf("changed to controller");
         } else {
             printf("Invalid mode.");
         }
