@@ -51,7 +51,7 @@
 #define abs(a) ((a>0) ? a:-a)
 
 float proportional_gain = 100;
-float desired_temp = 23;
+float desired_temp = 20;
 float measured_temp ;
 
 // PWM wrap value and clock divide value
@@ -123,7 +123,7 @@ char temp_2_bytes[64];
 char temp_3_bytes[64];
 char pwm_1_bytes[64];
 char pwm_2_bytes[64];
-char mode_bytes[2];
+char mode_bytes[64];
 bool received_first = false; 
 
 bool getBit(uint16_t metadata, int position)
@@ -210,16 +210,16 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
 
             if (mode == 0){
                 // TODO: update by received value
-                PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
+               // PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
                 control_1 = atof(pwm_1_bytes);
             } else {
                 if (control_1!=old_control_1) {
                     //printf("change duty cycle");
                     old_control_1 = control_1 ;
-                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (u_int16_t)(control_1));
                 }
                 error_1 = measured_temp - desired_temp;
-                control_1 = (int)(proportional_gain*error_1);
+                control_1 = (int32_t)(proportional_gain*error_1);
                 prev_error_1 = error_1;
                 // printf("Error: %f\n", error_1);
                 // printf("Control: %i\n",control_1);
@@ -236,7 +236,7 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
         if(update_PWM_2){
             if (mode == 0){
-               PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
+              // PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY);
                control_2 = atof(pwm_2_bytes);
             } else {
                 // Update duty cycle
@@ -244,10 +244,10 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
                     //printf("change duty cycle");
                     old_control_2 = control_2 ;
                 // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
-                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
+                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(control_2));
                 }
                 error_2 = measured_temp - desired_temp;
-                control_2 = (int)(proportional_gain*error_2);
+                control_2 = (int32_t)(proportional_gain*error_2);
                 prev_error_2 = error_2;
                 // printf("Error: %f\n", error_2);
                 // printf("Control: %i\n",control_2);
@@ -272,10 +272,10 @@ static PT_THREAD (protothread_ble(struct pt *pt))
 
     while(1) {
         // Wait for a bluetooth event (signaled by bluetooth write callback)
-        PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY) ;
+       // PT_SEM_SAFE_WAIT(pt, &BLUETOOTH_READY) ;
 
-        uint8_t received_mode = std::atoi(mode_bytes);
-        printf(mode_bytes);
+        uint8_t received_mode = atoi(mode_bytes);
+        //printf(mode_bytes);
         if (received_mode == 0) {
             mode = manual;
             printf("Changed to manual");
@@ -332,6 +332,8 @@ int main() {
     set_pwm_1_value(&pwm_1_val);
     set_pwm_2_value(&pwm_2_val);
 
+    //mode = controller;
+
     sleep_ms(10000);
     // while(1)
     // {
@@ -365,17 +367,17 @@ int main() {
 
 //     // printf("Left Sensor Begin Loop");
 
-    // i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
-    // gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
-    // gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
+    i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
+    gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
+    gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
 
-    // gpio_pull_up(I2C1_SCL);
-    // gpio_pull_up(I2C1_SDA);
+    gpio_pull_up(I2C1_SCL);
+    gpio_pull_up(I2C1_SDA);
 
-    // while(!sensor_3.begin()){
-    //     printf("Error: Sensor 3 failed to initialize\n");
-    //     sleep_ms(50);
-    // }
+    while(!sensor_3.begin()){
+        printf("Error: Sensor 3 failed to initialize\n");
+        sleep_ms(50);
+    }
 
 //     ////////////////////////////////////////////////////////////////////////
 //     ///////////////////////// PWM CONFIGURATION ////////////////////////////
@@ -425,7 +427,7 @@ int main() {
     // }
 
     // start core 0
-    pt_add_thread(protothread_ble);
+    //pt_add_thread(protothread_ble);
     pt_add_thread(protothread_temp) ;
     pt_schedule_start ;
    
