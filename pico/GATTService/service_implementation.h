@@ -5,6 +5,9 @@
 #include "bluetooth_gatt.h"
 #include "hardware/sync.h"
 
+
+void (*external_mode_callback)(uint8_t) = NULL;
+
 // Create a struct for managing this service
 typedef struct {
 
@@ -212,9 +215,12 @@ static uint16_t custom_service_read_callback(hci_con_handle_t con_handle, uint16
 
 // Write callback
 static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t attribute_handle, uint16_t transaction_mode, uint16_t offset, uint8_t *buffer, uint16_t buffer_size){
-    UNUSED(transaction_mode);
+	UNUSED(transaction_mode);
     UNUSED(offset);
     UNUSED(buffer_size);
+
+	GYATT_DB *instance = &service_object;
+	uint16_t max_copy_len = buffer_size < 63 ? buffer_size : 63;
 
 	// Write value directly to PWM 1 characteristic
 	if (attribute_handle == service_object.pwm_1_handle) {
@@ -230,8 +236,22 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 
 	// Write value directly to mode characteristic
 	if (attribute_handle == service_object.mode_handle) {
-		memcpy(service_object.mode_value, buffer, buffer_size);
-		service_object.mode_value[buffer_size] = '\0';  // Null-terminate
+		memcpy(instance->mode_value, buffer, max_copy_len);
+		instance->mode_value[max_copy_len] = '\0';
+
+		char *endptr;
+		long val = strtol(instance->mode_value, &endptr, 10);
+
+		if (*endptr != '\0') {
+			// printf("Invalid string input: '%s'\n", instance->mode_value);
+		} else {
+			if (val == 0 || val == 1) {
+				external_mode_callback(val);
+			}
+			// if (val == 0) printf("manual\n");
+			// else if (val == 1) printf("controller\n");
+			// else printf("Invalid value\n");
+		}
 	}
 
 	// Enable/disable notifications - Temp 1 
@@ -261,6 +281,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
     }
 	// Enable/disable notifications - Mode
     if (attribute_handle == service_object.mode_client_configuration_handle){
+
         service_object.mode_client_configuration = little_endian_read_16(buffer, 0);
         service_object.con_handle = con_handle;
     }
@@ -271,7 +292,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 ////////////////////////////// USER API /////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, char * pwm_2_ptr, char * mode_ptr)
+void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, char * pwm_2_ptr, char * mode_ptr, void (*mode_callback)(uint8_t))
 {
 
     // Pointer to our service object
@@ -284,6 +305,8 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 	instance->pwm_1_value = pwm_1_ptr ;
 	instance->pwm_2_value = pwm_2_ptr ;
 	instance->mode_value = mode_ptr ;
+
+	external_mode_callback = mode_callback;
 
     // Assign characteristic user description
 	instance->temp_1_user_description = char_temp_1;

@@ -122,6 +122,16 @@ char pwm_2_bytes[64];
 char mode_bytes[64];
 bool received_first = false; 
 
+void update_mode_callback(uint8_t new_mode) {
+    if (new_mode == 0) {
+        mode = manual;
+        printf("[MAIN] Set mode to manual\n");
+    } else if (new_mode == 1) {
+        mode = controller;
+        printf("[MAIN] Set mode to controller\n");
+    }
+}
+
 bool getBit(uint16_t metadata, int position)
 {
     return (metadata >> position) & 0x1;
@@ -253,31 +263,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
     PT_END(pt);
 }
 
-// Protothread that handles received Bluetooth data
-static PT_THREAD (protothread_ble(struct pt *pt))
-{
-    PT_BEGIN(pt);
-
-    while(1) {
-
-        uint8_t received_mode = atoi(mode_bytes);
-        //printf(mode_bytes);
-        if (received_mode == 0) {
-            mode = manual;
-            printf("Changed to manual");
-        } else if (received_mode == 1){
-            mode = controller;
-            printf("changed to controller");
-        } else {
-            printf("Invalid mode.");
-        }
-    }
-
-  PT_END(pt);
-}
-
-
-
 int main() {
 
     // Initialize stdio
@@ -295,7 +280,7 @@ int main() {
     att_server_init(profile_data, NULL, NULL);
 
     // TODO: update definition in service_implementation.h to reflect additional argument
-    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, pwm_2_bytes, mode_bytes);
+    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, pwm_2_bytes, mode_bytes, update_mode_callback);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
@@ -321,13 +306,7 @@ int main() {
     //mode = controller;
 
     sleep_ms(10000);
-    // while(1)
-    // {
-    //     sleep_ms(1000);
-    //     // temp_1_val = 100.0;
-    //     set_temp_1_value(&temp_1_val);
-    //     temp_1_val = (int)(temp_1_val + 1) % 45;
-    // }
+    
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
     i2c_init(I2C_CHAN_0, 400 * 1000) ;
@@ -351,8 +330,6 @@ int main() {
         sleep_ms(50);
     }
 
-//     // printf("Left Sensor Begin Loop");
-
     i2c_init(I2C_CHAN_1, I2C_BAUD_RATE) ; 
     gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
     gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C); 
@@ -360,9 +337,8 @@ int main() {
     gpio_pull_up(I2C1_SCL);
     gpio_pull_up(I2C1_SDA);
 
-    while(!sensor_3.begin()){
+    if (!sensor_3.begin()){
         printf("Error: Sensor 3 failed to initialize\n");
-        sleep_ms(50);
     }
 
 //     ////////////////////////////////////////////////////////////////////////
@@ -396,26 +372,7 @@ int main() {
     // Start the channel
     pwm_set_mask_enabled((1u << slice_num_1));
     pwm_set_mask_enabled((1u << slice_num_2));
-    ////////////////////////////////////////////////////////////////////////
-    ///////////////////////////// ROCK AND ROLL ////////////////////////////
-    ////////////////////////////////////////////////////////////////////////
-    // // start core 1 
-    // multicore_reset_core1();
-    // multicore_launch_core1(core1_entry);
-    // while(1){
-    //     sensor_1.read_temperature(&temp_1_val);
 
-    //     if (!sensor_1.read_temperature(&temp_1_val)) {
-    //         printf("Error: Sensor failed to read temperature\n");
-    //     }
-    //     printf("Temperature: %.2f\n\n", temp_1_val);
-    //     set_temp_1_value(&temp_1_val);
-    // }
-
-    // start core 0
-    //pt_add_thread(protothread_ble);
     pt_add_thread(protothread_temp) ;
     pt_schedule_start ;
-   
-
 }
