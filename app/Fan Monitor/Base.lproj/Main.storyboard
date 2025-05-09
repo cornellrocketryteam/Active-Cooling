@@ -111,7 +111,6 @@
                             <constraint firstItem="Tlg-3b-cRR" firstAttribute="leading" secondItem="idf-WY-L7d" secondAttribute="leadingMargin" id="v19-rC-zvE"/>
                             <constraint firstItem="Tlg-3b-cRR" firstAttribute="leading" secondItem="kf6-u8-vSf" secondAttribute="leading" id="vvf-ru-JoP"/>
                             <constraint firstItem="Kta-g5-nOC" firstAttribute="leading" secondItem="Tlg-3b-cRR" secondAttribute="trailing" constant="8" id="wcW-K8-2hd"/>
-                            <constraint firstItem="Tlg-3b-cRR" firstAttribute="top" secondItem="idf-WY-L7d" secondAttribute="topMargin" constant="-17" id="yR7-tZ-Y8r"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Fans" id="CGF-mD-bPi">
