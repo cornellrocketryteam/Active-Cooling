@@ -94,11 +94,6 @@ int32_t old_control;
 volatile bool update_PWM_1;
 volatile bool update_PWM_2;
 
-//Controller variables
-volatile float k_p;
-volatile float k_i;
-volatile float k_d; 
-
 //PID + Intermediary variables
 float dt = 0.001;
 
@@ -119,8 +114,21 @@ char temp_2_bytes[64];
 char temp_3_bytes[64];
 char pwm_1_bytes[64];
 char pwm_2_bytes[64];
+char kp_bytes[64];
 char mode_bytes[64];
 bool received_first = false; 
+
+void update_pwm_1_callback(uint32_t new_pwm) {
+    printf("UPDATED PWM 1: %d", new_pwm);
+}
+
+void update_pwm_2_callback(uint32_t new_pwm) {
+    printf("UPDATED PWM 2: %d", new_pwm);
+}
+
+void update_kp_callback(float new_kp) {
+    proportional_gain = new_kp;
+}
 
 void update_mode_callback(uint8_t new_mode) {
     if (new_mode == 0) {
@@ -280,7 +288,7 @@ int main() {
     att_server_init(profile_data, NULL, NULL);
 
     // TODO: update definition in service_implementation.h to reflect additional argument
-    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, pwm_2_bytes, mode_bytes, update_mode_callback);
+    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, update_pwm_1_callback, pwm_2_bytes, update_pwm_2_callback, kp_bytes, update_kp_callback, mode_bytes, update_mode_callback);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);

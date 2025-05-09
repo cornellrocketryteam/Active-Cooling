@@ -89,6 +89,7 @@
                                             </subviews>
                                         </tableViewCellContentView>
                                         <connections>
+                                            <outlet property="chartContainerView" destination="zPr-zY-wsC" id="BOk-UX-jmi"/>
                                             <outlet property="currentTimeLabel" destination="387-xj-uNi" id="H0x-KT-AYK"/>
                                             <outlet property="currentValueLabel" destination="Xgx-90-5L2" id="gWa-VD-cGK"/>
                                             <outlet property="titleLabel" destination="Me8-Gt-dRB" id="PnL-U5-i8C"/>

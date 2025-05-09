@@ -160,6 +160,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             case Temp3_Char_UUID:
                 temp3Char = characteristic
                 peripheral.setNotifyValue(true, for: characteristic)
+            case Kp_Char_UUID:
+                kpChar = characteristic
             case Mode_Char_UUID:
                 modeChar = characteristic
             default:
@@ -176,9 +178,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         guard let value = characteristic.value else { return }
         
         let stringValue = String(decoding: value, as: UTF8.self)
-//        
         print("Characteristic uuid: \(characteristic.uuid), value: \(stringValue)")
-        
         
         switch characteristic.uuid {
         case Fan1_Char_UUID:
@@ -252,11 +252,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
               let characteristic = characteristic else {
             print("errored")
             return }
-        
-        print("IN HERE")
 
         if let data = value.data(using: .utf8) {
-            print("WRITING")
             peripheral.writeValue(data, for: characteristic, type: .withoutResponse)
         }
     }

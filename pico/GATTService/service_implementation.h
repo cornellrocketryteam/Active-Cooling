@@ -5,8 +5,10 @@
 #include "bluetooth_gatt.h"
 #include "hardware/sync.h"
 
-
+void (*external_pwm_1_callback)(uint32_t) = NULL;
+void (*external_pwm_2_callback)(uint32_t) = NULL;
 void (*external_mode_callback)(uint8_t) = NULL;
+void (*external_kp_callback)(float) = NULL;
 
 // Create a struct for managing this service
 typedef struct {
@@ -107,7 +109,7 @@ char char_temp_3[] = "Temperature 3 deg C" ;
 char char_pwm_1[] = "PWM 1 Duty Cycle" ;
 char char_pwm_2[] = "PWM 2 Duty Cycle" ;
 char char_mode[] = "Mode" ; 
-char char_Kp[] = "Kp"
+char char_Kp[] = "Kp";
 
 // Callback functions for ATT notifications on characteristics
 static void characteristic_temp_1_callback(void * context){
@@ -252,14 +254,33 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 
 	// Write value directly to PWM 1 characteristic
 	if (attribute_handle == service_object.pwm_1_handle) {
-		memcpy(service_object.pwm_1_value, buffer, buffer_size);
-		service_object.pwm_1_value[buffer_size] = '\0';  // Null-terminate
+		memcpy(instance->pwm_1_value, buffer, max_copy_len);
+		instance->pwm_1_value[max_copy_len] = '\0';
+
+		char *endptr;
+		uint32_t parsed = strtoul(instance->pwm_1_value, &endptr, 10);
+
+		if (endptr == instance->pwm_1_value || *endptr != '\0' || parsed > UINT32_MAX) {
+			// printf("Invalid uint32_t for PWM 1: '%s'\n", instance->pwm_1_value);
+		} else {
+			printf("PARSED: %d\n", parsed);
+			external_pwm_1_callback(parsed);
+		}
 	}
 
 	// Write value directly to PWM 2 characteristic
 	if (attribute_handle == service_object.pwm_2_handle) {
-		memcpy(service_object.pwm_2_value, buffer, buffer_size);
-		service_object.pwm_2_value[buffer_size] = '\0';  // Null-terminate
+		memcpy(instance->pwm_2_value, buffer, max_copy_len);
+		instance->pwm_2_value[max_copy_len] = '\0';
+
+		char *endptr;
+		uint32_t parsed = strtoul(instance->pwm_2_value, &endptr, 10);
+
+		if (endptr == instance->pwm_2_value || *endptr != '\0' || parsed > UINT32_MAX) {
+			// printf("Invalid uint32_t for PWM 1: '%s'\n", instance->pwm_1_value);
+		} else {
+			external_pwm_2_callback(parsed);
+		}
 	}
 
 	// Write value directly to mode characteristic
@@ -276,11 +297,23 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 			if (val == 0 || val == 1) {
 				external_mode_callback(val);
 			}
-			// if (val == 0) printf("manual\n");
-			// else if (val == 1) printf("controller\n");
-			// else printf("Invalid value\n");
 		}
 	}
+
+	if (attribute_handle == service_object.Kp_handle) {
+		memcpy(instance->Kp_value, buffer, max_copy_len);
+		instance->Kp_value[max_copy_len] = '\0';
+
+		char *endptr;
+		float parsed = strtof(instance->Kp_value, &endptr);
+
+		if (endptr == instance->Kp_value || *endptr != '\0') {
+			// printf("Invalid float for Kp: '%s'\n", instance->Kp_value);
+		} else {
+			external_kp_callback(parsed);
+		}
+	}
+
 
 	// Enable/disable notifications - Temp 1 
     if (attribute_handle == service_object.temp_1_client_configuration_handle){
@@ -326,7 +359,7 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 ////////////////////////////// USER API /////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, char * pwm_2_ptr, char * Kp_ptr, char * mode_ptr, void (*mode_callback)(uint8_t))
+void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3_ptr, char * pwm_1_ptr, void (*pwm_1_callback)(uint32_t), char * pwm_2_ptr, void (*pwm_2_callback)(uint32_t), char * Kp_ptr, void (*kp_callback)(float), char * mode_ptr, void (*mode_callback)(uint8_t))
 {
 
     // Pointer to our service object
@@ -341,6 +374,9 @@ void custom_service_server_init(char * tmp_1_ptr, char * tmp_2_ptr, char * tmp_3
 	instance->Kp_value = Kp_ptr ;
 	instance->mode_value = mode_ptr ;
 
+	external_pwm_1_callback = pwm_1_callback;
+	external_pwm_2_callback = pwm_2_callback;
+	external_kp_callback = kp_callback;
 	external_mode_callback = mode_callback;
 
     // Assign characteristic user description

@@ -13,6 +13,7 @@ class FansTableViewCell: UITableViewCell {
     
     @IBOutlet weak var currentValueLabel: UILabel!
     @IBOutlet weak var currentTimeLabel: UILabel!
+    @IBOutlet weak var chartContainerView: UIView!
     
     override func awakeFromNib() {
         super.awakeFromNib()
