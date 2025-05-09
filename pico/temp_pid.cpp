@@ -74,15 +74,23 @@ float measured_temp ;
 
 //temp variables that will be in driver - DELETE when integrated
 #define I2C_BAUD_RATE 100000
+
+enum Mode {
+    manual,
+    controller
+};
+
+Mode mode;
+
 // Variable to hold PWM slice number
 uint slice_num_1 ;
 uint slice_num_2 ;
 
 // PWM duty cycle
-volatile int control_1;
-volatile int old_control_1;
-volatile int control_2 ;
-volatile int old_control_2 ;
+int32_t control_1;
+int32_t old_control_1;
+int32_t control_2 ;
+int32_t old_control_2 ;
 
 //PWM control flag
 volatile bool update_PWM_1;
@@ -115,6 +123,7 @@ char temp_2_bytes[64];
 char temp_3_bytes[64];
 char pwm_1_bytes[64];
 char pwm_2_bytes[64];
+char mode_bytes[2];
 bool received_first = false; 
 
 bool getBit(uint16_t metadata, int position)
@@ -134,25 +143,6 @@ void on_pwm_wrap(){
         update_PWM_2 = true;
     }
 }
-// PWM interrupt service routine - Fan 1
-// void on_pwm_wrap_1() {
-//     //printf("in pwm wrap");
-//     // Clear the interrupt flag that brought us here
-//     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
-//     update_PWM_1 = true;
-//     // Update duty cycle
-//     //sleep_ms(20);
-// }
-
-// // PWM interrupt service routine - Fan 2
-// void on_pwm_wrap_2() {
-//     //printf("in pwm wrap");
-//     // Clear the interrupt flag that brought us here
-//     pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
-//     update_PWM_2 = true;
-//     //sleep_ms(20);
-// }
-
 // Temperature polling thread
 static PT_THREAD (protothread_temp(struct pt *pt)){
     PT_BEGIN(pt);
@@ -164,8 +154,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
     bool useThree = true;
     while(1){
         //Temp sensor 1
-        sensor_1.read_temperature(&temp_1_val);
-
         if (!sensor_1.read_temperature(&temp_1_val)) {
             printf("Error: Sensor 1 failed to read temperature\n");
             useOne = false;
@@ -174,7 +162,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         set_temp_1_value(&temp_1_val);
 
         //Temp sensor 2
-        sensor_2.read_temperature(&temp_2_val);
         if (!sensor_2.read_temperature(&temp_2_val)) {
             printf("Error: Sensor 2 failed to read temperature\n");
             useTwo = false;
@@ -183,7 +170,6 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         set_temp_2_value(&temp_2_val);
 
         //Temp Sensor 3
-        sensor_3.read_temperature(&temp_3_val);
         if (!sensor_3.read_temperature(&temp_3_val)) {
             printf("Error: Sensor 3 failed to read temperature\n");
             useThree = false;
@@ -195,65 +181,111 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
         else if(useOne && useTwo){
             measured_temp = (temp_1_val+temp_2_val)/2;
+            useThree = true;
         }
         else if(useOne && useThree){
             measured_temp = (temp_1_val+temp_3_val)/2;
+            useTwo = true;
         }
         else if(useTwo && useThree){
             measured_temp = (temp_2_val+temp_3_val)/2;
+            useOne = true;
         }
         else if(useOne){
             measured_temp = temp_1_val;
+            useTwo = true;
+            useThree = true;
         }
         else if(useTwo){
             measured_temp = temp_2_val;
+            useOne = true;
+            useThree = true;
         }
         else{
             measured_temp = temp_3_val;
+            useOne = true;
+            useTwo = true;
         }
         if(update_PWM_1){
-            if (control_1!=old_control_1) {
-                //printf("change duty cycle");
-                old_control_1 = control_1 ;
-                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+
+            if (mode == 0){
+                // TODO: update by received value
+                control_1 = atof(pwm_1_bytes);
+            } else {
+                if (control_1!=old_control_1) {
+                    //printf("change duty cycle");
+                    old_control_1 = control_1 ;
+                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+                }
+                error_1 = measured_temp - desired_temp;
+                control_1 = (int)(proportional_gain*error_1);
+                prev_error_1 = error_1;
+                // printf("Error: %f\n", error_1);
+                // printf("Control: %i\n",control_1);
+                if (control_1 < 0) {
+                    control_1 = 0;
+                }
+                else if (control_1 > 1500){
+                    control_1 = 1500;
+                }
             }
-            error_1 = measured_temp - desired_temp;
-            control_1 = (int)(proportional_gain*error_1);
-            prev_error_1 = error_1;
-            // printf("Error: %f\n", error_1);
-            // printf("Control: %i\n",control_1);
-            if (control_1 < 0) {
-                control_1 = 0;
-            }
-            else if (control_1 > 1500){
-                control_1 = 1500;
-            }
+            set_pwm_1_value(&control_1);
             update_PWM_1 = false;
+
         }
         if(update_PWM_2){
-            // Update duty cycle
-            if (control_2!=old_control_2) {
-                //printf("change duty cycle");
-                old_control_2 = control_2 ;
-            // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
-                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
+            if (mode == 0){
+               control_2 = atof(pwm_2_bytes);
+            } else {
+                // Update duty cycle
+                if (control_2!=old_control_2) {
+                    //printf("change duty cycle");
+                    old_control_2 = control_2 ;
+                // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
+                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
+                }
+                error_2 = measured_temp - desired_temp;
+                control_2 = (int)(proportional_gain*error_2);
+                prev_error_2 = error_2;
+                // printf("Error: %f\n", error_2);
+                // printf("Control: %i\n",control_2);
+                if (control_2 < 0) {
+                    control_2 = 0;
+                }
+                else if (control_2 > 1500){
+                    control_2 = 1500;
+                }
             }
-            error_2 = measured_temp - desired_temp;
-            control_2 = (int)(proportional_gain*error_2);
-            prev_error_2 = error_2;
-            // printf("Error: %f\n", error_2);
-            // printf("Control: %i\n",control_2);
-            if (control_2 < 0) {
-                control_2 = 0;
-            }
-            else if (control_2 > 1500){
-                control_2 = 1500;
-            }
+            set_pwm_2_value(&control_2);
             update_PWM_2 = false;
         }
     }
     PT_END(pt);
 }
+
+// Protothread that handles received Bluetooth data
+static PT_THREAD (protothread_ble(struct pt *pt))
+{
+    PT_BEGIN(pt);
+
+    while(1) {
+
+        uint8_t received_mode = std::atoi(mode_bytes);
+        printf(mode_bytes);
+        if (received_mode == 0) {
+            mode = manual;
+            printf("Changed to manual");
+        } else if (received_mode == 1){
+            mode = controller;
+            printf("changed to controller");
+        } else {
+            printf("Invalid mode.");
+        }
+    }
+
+  PT_END(pt);
+}
+
 
 
 int main() {
@@ -272,7 +304,8 @@ int main() {
 
     att_server_init(profile_data, NULL, NULL);
 
-    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, pwm_2_bytes);
+    // TODO: update definition in service_implementation.h to reflect additional argument
+    custom_service_server_init(temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes, pwm_2_bytes, mode_bytes);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
@@ -316,15 +349,15 @@ int main() {
     // }
     // printf("Connected\n");
 
-    while (!sensor_1.begin()) {
+    if(!sensor_1.begin()) {
         printf("Error: Sensor 1 failed to initialize\n");
         sleep_ms(50);
     }
     
-    // while(!sensor_2.begin(0x77)){
-    //     printf("Error: Sensor 2 failed to initialize\n");
-    //     sleep_ms(50);
-    // }
+    if(!sensor_2.begin(0x77)){
+        printf("Error: Sensor 2 failed to initialize\n");
+        sleep_ms(50);
+    }
 
 //     // printf("Left Sensor Begin Loop");
 
@@ -388,6 +421,7 @@ int main() {
     // }
 
     // start core 0
+    pt_add_thread(protothread_ble);
     pt_add_thread(protothread_temp) ;
     pt_schedule_start ;
    
