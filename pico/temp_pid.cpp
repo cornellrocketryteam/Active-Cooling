@@ -51,7 +51,7 @@
 #define abs(a) ((a>0) ? a:-a)
 
 float proportional_gain = 100;
-float desired_temp = 20;
+float desired_temp = 25;
 float measured_temp ;
 
 // PWM wrap value and clock divide value
@@ -94,6 +94,9 @@ int32_t old_control;
 volatile bool update_PWM_1;
 volatile bool update_PWM_2;
 
+int32_t manual_pwm_1 = 101;
+int32_t manual_pwm_2 = 101;
+
 //PID + Intermediary variables
 float dt = 0.001;
 
@@ -119,11 +122,13 @@ char mode_bytes[64];
 bool received_first = false; 
 
 void update_pwm_1_callback(uint32_t new_pwm) {
-    printf("UPDATED PWM 1: %d", new_pwm);
+    // printf("UPDATED PWM 1: %d", new_pwm);
+    manual_pwm_1 = new_pwm;
 }
 
 void update_pwm_2_callback(uint32_t new_pwm) {
-    printf("UPDATED PWM 2: %d", new_pwm);
+    // printf("UPDATED PWM 2: %d", new_pwm);
+    manual_pwm_2 = new_pwm;
 }
 
 void update_kp_callback(float new_kp) {
@@ -138,6 +143,10 @@ void update_mode_callback(uint8_t new_mode) {
         mode = controller;
         printf("[MAIN] Set mode to controller\n");
     }
+}
+
+void update_desired_temp_callback(float new_temp) {
+
 }
 
 bool getBit(uint16_t metadata, int position)
@@ -219,14 +228,14 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
 
         measured_temp = sum / count;
-        error = measured_temp - desired_temp;
+        error = desired_temp - measured_temp;
         // printf("Error: %f\n", error);
 
         if(update_PWM_1){
             // Handle manual mode
             if (mode == 0){
-                control = atof(pwm_1_bytes);
-                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(control));
+                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(manual_pwm_1));
+                set_pwm_1_value(&manual_pwm_1);
             } else {
                 if (control!=old_control) {
                     old_control = control;
@@ -240,15 +249,16 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
                 else if (control > 1500){
                     control = 1500;
                 }
+                set_pwm_1_value(&control);
             }
-            set_pwm_1_value(&control);
             update_PWM_1 = false;
         }
         if(update_PWM_2){
             // Handle manual mode
             if (mode == 0){
-                control = atof(pwm_2_bytes);
-                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(control));
+                // printf("MANUAL PWM = %d\n", manual_pwm_2);
+                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(manual_pwm_2));
+                set_pwm_2_value(&manual_pwm_2);
             } else {
                 if (control!=old_control) {
                     old_control = control;
@@ -262,8 +272,8 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
                 else if (control > 1500){
                     control = 1500;
                 }
+                set_pwm_2_value(&control);
             }
-            set_pwm_2_value(&control);
             update_PWM_2 = false;
         }
         prev_error = error;

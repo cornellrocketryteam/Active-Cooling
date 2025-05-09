@@ -44,6 +44,10 @@ typedef struct {
 	char * 		Kp_value;
 	char * 		Kp_user_description ;
 
+	// Desired Temp
+	char * 		desired_temp_value;
+	char * 		desired_temp_user_description ;
+
 
 	// Characteristic temp 1 handles
 	uint16_t  	temp_1_handle ;
@@ -87,6 +91,12 @@ typedef struct {
 	uint16_t    Kp_client_configuration ;
 	uint16_t    Kp_client_configuration_handle ;
 
+	// Characteristic desired temp handles
+	uint16_t  	desired_temp_handle ;
+	uint16_t 	desired_temp_user_description_handle ;
+	uint16_t    desired_temp_client_configuration ;
+	uint16_t    desired_temp_client_configuration_handle ;
+
 	// Callback functions
 	btstack_context_callback_registration_t callback_temp_1 ;
     btstack_context_callback_registration_t callback_temp_2 ;
@@ -95,6 +105,7 @@ typedef struct {
     btstack_context_callback_registration_t callback_pwm_2 ;
 	btstack_context_callback_registration_t callback_mode ;
 	btstack_context_callback_registration_t callback_Kp ;
+	btstack_context_callback_registration_t callback_desired_temp ;
 
 } GYATT_DB ;
 
@@ -110,6 +121,7 @@ char char_pwm_1[] = "PWM 1 Duty Cycle" ;
 char char_pwm_2[] = "PWM 2 Duty Cycle" ;
 char char_mode[] = "Mode" ; 
 char char_Kp[] = "Kp";
+char char_desired_temp[] = "Desired Temperature";
 
 // Callback functions for ATT notifications on characteristics
 static void characteristic_temp_1_callback(void * context){
@@ -159,6 +171,13 @@ static void characteristic_Kp_callback(void * context){
 	GYATT_DB * instance = (GYATT_DB *) context ;
 	// Send a notification
 	att_server_notify(instance->con_handle, instance->Kp_handle, (uint8_t*)instance->Kp_value, strlen(instance->Kp_value)) ;
+}
+
+static void characteristic_desired_temp_callback(void * context){
+	// Associate the void pointer input with our custom service object
+	GYATT_DB * instance = (GYATT_DB *) context ;
+	// Send a notification
+	att_server_notify(instance->con_handle, instance->Kp_handle, (uint8_t*)instance->desired_temp_value, strlen(instance->desired_temp_value)) ;
 }
 
 // Read callback (no client configuration handles on characteristics without Notify)
@@ -239,6 +258,17 @@ static uint16_t custom_service_read_callback(hci_con_handle_t con_handle, uint16
 	}
 	if (attribute_handle == service_object.Kp_client_configuration_handle){
         return att_read_callback_handle_little_endian_16(service_object.Kp_client_configuration, offset, buffer, buffer_size);
+    }
+
+	// Characteristic desired temp
+	if (attribute_handle == service_object.desired_temp_handle){
+		return att_read_callback_handle_blob((uint8_t*)service_object.desired_temp_value, strlen(service_object.desired_temp_value), offset, buffer, buffer_size);
+	}
+	if (attribute_handle == service_object.desired_temp_user_description_handle) {
+		return att_read_callback_handle_blob((uint8_t*)service_object.desired_temp_user_description, strlen(service_object.desired_temp_user_description), offset, buffer, buffer_size);
+	}
+	if (attribute_handle == service_object.desired_temp_client_configuration_handle){
+        return att_read_callback_handle_little_endian_16(service_object.desired_temp_client_configuration, offset, buffer, buffer_size);
     }
     return 0;
 }
