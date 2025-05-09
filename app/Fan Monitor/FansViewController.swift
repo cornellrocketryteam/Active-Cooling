@@ -42,7 +42,7 @@ class FansViewController: UIViewController {
         
         if modeSwitch.isOn {
             sheetVC = storyboard.instantiateViewController(withIdentifier: "ControllerSettingsSheet")
-            
+            sheetVC.modalPresentationStyle = .pageSheet
             if let sheet = sheetVC.sheetPresentationController {
                 sheet.detents = [
                     .custom { context in
@@ -55,7 +55,7 @@ class FansViewController: UIViewController {
             }
         } else {
             sheetVC = storyboard.instantiateViewController(withIdentifier: "ManualSettingsSheet")
-
+            sheetVC.modalPresentationStyle = .pageSheet
             if let sheet = sheetVC.sheetPresentationController {
                 sheet.detents = [
                     .custom { context in
@@ -67,8 +67,6 @@ class FansViewController: UIViewController {
                 sheet.preferredCornerRadius = 20
             }
         }
-        
-        sheetVC.modalPresentationStyle = .pageSheet
         present(sheetVC, animated: true)
     }
     
@@ -76,7 +74,6 @@ class FansViewController: UIViewController {
     @objc func updateFan1(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }
-        print("update fan 1")
         currentPWMs[0] = pwm
         tableView.reloadData()
     }
@@ -84,7 +81,6 @@ class FansViewController: UIViewController {
     @objc func updateFan2(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }
-        print("update fan 2")
         currentPWMs[1] = pwm
         tableView.reloadData()
     }
