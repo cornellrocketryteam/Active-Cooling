@@ -87,10 +87,8 @@ uint slice_num_1 ;
 uint slice_num_2 ;
 
 // PWM duty cycle
-int32_t control_1;
-int32_t old_control_1;
-int32_t control_2 ;
-int32_t old_control_2 ;
+int32_t control;
+int32_t old_control;
 
 //PWM control flag
 volatile bool update_PWM_1;
@@ -104,10 +102,8 @@ volatile float k_d;
 //PID + Intermediary variables
 float dt = 0.001;
 
-float error_1;
-float prev_error_1;
-float error_2;
-float prev_error_2;
+float error;
+float prev_error;
 
 // Sensor Variables
 BME280 sensor_1(I2C_CHAN_0);
@@ -176,89 +172,83 @@ static PT_THREAD (protothread_temp(struct pt *pt)){
         }
        // printf("Temperature: %.2f\n\n", temp_3_val);
         set_temp_3_value(&temp_3_val);
-        if(useOne && useTwo && useThree){
-            measured_temp = (temp_1_val + temp_2_val + temp_3_val)/3;
-        }
-        else if(useOne && useTwo){
-            measured_temp = (temp_1_val+temp_2_val)/2;
-            useThree = true;
-        }
-        else if(useOne && useThree){
-            measured_temp = (temp_1_val+temp_3_val)/2;
-            useTwo = true;
-        }
-        else if(useTwo && useThree){
-            measured_temp = (temp_2_val+temp_3_val)/2;
-            useOne = true;
-        }
-        else if(useOne){
-            measured_temp = temp_1_val;
-            useTwo = true;
-            useThree = true;
-        }
-        else if(useTwo){
-            measured_temp = temp_2_val;
-            useOne = true;
-            useThree = true;
-        }
-        else{
-            measured_temp = temp_3_val;
-            useOne = true;
-            useTwo = true;
-        }
-        if(update_PWM_1){
 
+        float sum = 0;
+        int count = 0;
+
+        if (useOne) {
+            sum += temp_1_val;
+            count++;
+        }
+        if (useTwo) {
+            sum += temp_2_val;
+            count++;
+        }
+        if (useThree) {
+            sum += temp_3_val;
+            count++;
+        }
+
+        // Default to temp_3_val if no sensors active
+        if (count == 0) {
+            sum = temp_3_val;
+            count = 1;
+            useOne = useTwo = true;
+        }
+
+        if (count < 3) {
+            useOne = useTwo = useThree = true;
+        }
+
+        measured_temp = sum / count;
+        error = measured_temp - desired_temp;
+        // printf("Error: %f\n", error);
+
+        if(update_PWM_1){
+            // Handle manual mode
             if (mode == 0){
-                // TODO: update by received value
-                control_1 = atof(pwm_1_bytes);
+                control = atof(pwm_1_bytes);
+                pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
             } else {
-                if (control_1!=old_control_1) {
-                    //printf("change duty cycle");
-                    old_control_1 = control_1 ;
-                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control_1);
+                if (control!=old_control) {
+                    old_control = control;
+                    pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
                 }
-                error_1 = measured_temp - desired_temp;
-                control_1 = (int)(proportional_gain*error_1);
-                prev_error_1 = error_1;
-                // printf("Error: %f\n", error_1);
+                control = (int)(proportional_gain*error);
                 // printf("Control: %i\n",control_1);
-                if (control_1 < 0) {
-                    control_1 = 0;
+                if (control < 0) {
+                    control = 0;
                 }
-                else if (control_1 > 1500){
-                    control_1 = 1500;
+                else if (control > 1500){
+                    control = 1500;
                 }
             }
-            set_pwm_1_value(&control_1);
+            set_pwm_1_value(&control);
             update_PWM_1 = false;
-
         }
         if(update_PWM_2){
+            // Handle manual mode
             if (mode == 0){
-               control_2 = atof(pwm_2_bytes);
+                control = atof(pwm_2_bytes);
+                pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
             } else {
-                // Update duty cycle
-                if (control_2!=old_control_2) {
-                    //printf("change duty cycle");
-                    old_control_2 = control_2 ;
-                // pwm_set_chan_level(slice_num_1, PWM_CHAN_B, control);
-                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control_2);
+                if (control!=old_control) {
+                    old_control = control;
+                    pwm_set_chan_level(slice_num_2, PWM_CHAN_A, control);
                 }
-                error_2 = measured_temp - desired_temp;
-                control_2 = (int)(proportional_gain*error_2);
-                prev_error_2 = error_2;
-                // printf("Error: %f\n", error_2);
-                // printf("Control: %i\n",control_2);
-                if (control_2 < 0) {
-                    control_2 = 0;
+                control = (int)(proportional_gain*error);
+                // printf("Control: %i\n",control_1);
+                if (control < 0) {
+                    control = 0;
                 }
-                else if (control_2 > 1500){
-                    control_2 = 1500;
+                else if (control > 1500){
+                    control = 1500;
                 }
             }
-            set_pwm_2_value(&control_2);
+            set_pwm_2_value(&control);
             update_PWM_2 = false;
         }
+        prev_error = error;
     }
     PT_END(pt);
 }
