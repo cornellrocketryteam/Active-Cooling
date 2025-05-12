@@ -79,10 +79,8 @@ class FansViewController: UIViewController {
     @objc func updateFan1(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }
-        print("here0")
         currentPWMs[0] = pwm
         chartModels[0].append(pwm)
-        print("Fan 0: appended \(pwm), count: \(chartModels[0].data.count)")
 
         tableView.reloadData()
     }
@@ -90,14 +88,11 @@ class FansViewController: UIViewController {
     @objc func updateFan2(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }
-        print("here1")
         currentPWMs[1] = pwm
         chartModels[1].append(pwm)
-        print("Fan 1: appended \(pwm), count: \(chartModels[1].data.count)")
 
         tableView.reloadData()
     }
-    
 }
 
 extension FansViewController: UITableViewDelegate {
