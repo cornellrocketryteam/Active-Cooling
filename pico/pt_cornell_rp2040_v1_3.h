@@ -857,7 +857,7 @@ static PT_THREAD (protothread_sched1(struct pt *pt))
 {   
     PT_BEGIN(pt);
     
-    static int i, rate;
+    static int i;
     
     if (pt_sched_method==SCHED_ROUND_ROBIN){
         while(1) {
@@ -938,8 +938,6 @@ static PT_THREAD (protothread_sched1(struct pt *pt))
 #define pt_buffer_size 100
 char pt_serial_in_buffer[pt_buffer_size];
 char pt_serial_out_buffer[pt_buffer_size];
-// thread pointers
-static struct pt pt_serialin, pt_serialout ;
 // uart
 #define UART_ID uart0
 //

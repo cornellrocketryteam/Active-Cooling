@@ -5,12 +5,12 @@
 #include "bluetooth_gatt.h"
 #include "hardware/sync.h"
 
+// Callbacks
 void (*external_pwm_1_callback)(uint32_t) = NULL;
 void (*external_pwm_2_callback)(uint32_t) = NULL;
 void (*external_mode_callback)(uint8_t) = NULL;
 void (*external_kp_callback)(float) = NULL;
 void (*external_desired_temp_callback)(float) = NULL;
-
 
 // Create a struct for managing this service
 typedef struct {
@@ -49,7 +49,6 @@ typedef struct {
 	// Desired Temp
 	char * 		desired_temp_value;
 	char * 		desired_temp_user_description ;
-
 
 	// Characteristic temp 1 handles
 	uint16_t  	temp_1_handle ;
