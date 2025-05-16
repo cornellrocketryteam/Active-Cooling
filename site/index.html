@@ -87,6 +87,23 @@
       <section id="software" class="section">
         <h2>Software Design</h2>
 
+         <h5 class="mt-5 mb-2">Pico</h5>
+
+        <h5 class="mt-5 mb-2">iPhone App</h5>
+
+        <p>
+          The app was built in Xcode using Swift, a language created by Apple specifically for development on their platforms. To maximize usability, the frontend was built first so we could see and iterate upon how the data was going to look to the user. I chose to build the frontend using Xcode’s storyboard feature, in which you can lay out all user interface elements visually onto a mock iPhone screen, which eliminates a lot of the pain and tedium of doing it through code only. 
+          As each view has its own storyboard, there is one for the thermal view, fan view, and the fan control windows. Each of these views has its own view controller class which manages, via Swift code, how the view responds to user interaction and dynamic data. Here, I store things like backing arrays for the charts of data, or other things like button states. Every iOS app is rigidly structured according to the Model-View-Controller paradigm, so there is not a whole lot of freedom to custom design the software architecture. For the backend, the majority of the functionality came from implementing the Bluetooth interface.
+        </p>
+
+        <p>
+          Apple provides many native libraries for interacting with the iPhone’s hardware, such as the Core Bluetooth package for its Bluetooth modem. Using this package, I created a BluetoothManager singleton class which extends from two important Core Bluetooth packages: CBCentralManagerDelegate and CBPeripheralDelegate. CBCentralManagerDelegate allows the app to manage scanning for and connecting to nearby Bluetooth peripherals, while CBPeripheralDelegate handles events related to the connected peripheral, such as discovering services and receiving data from characteristics. 
+          To extend from these two classes, you must implement a set of required methods to specify things like which primary service to look for and which characteristics to process. The vast majority of Bluetooth functionality for the app came from implementing these methods. One of these methods, didUpdateValueFor, is called whenever a known characteristic is updated. Thus, if, for example, a new temperature reading on thermometer 1 is received, I update the backing data array for the thermometer 1 chart and refresh the UI for that chart specifically, enabling automatic UI updates as new Bluetooth data comes in.
+        </p>
+
+        <p>
+          When the app is opened, the BluetoothManager class is initialized and no additional configuration is required from the user.
+        </p>
       </section>
 
       <section id="results" class="section">
@@ -120,17 +137,13 @@
       <section id="appendices" class="section">
         <h2>Appendices</h2>
 
-        <h5 class="mt-5 mb-2">
-          Appendix A
-        </h5>
+        <h5 class="mt-5 mb-2">Appendix A</h5>
 
         <p class="mb-4">
           The group approves this report for inclusion on the course website. The group approves the video for inclusion on the course youtube channel.
         </p>
 
-        <h5 class="mt-5 mb-2">
-          Appendix B
-        </h5>
+        <h5 class="mt-5 mb-2">Appendix B</h5>
 
         <p class="mb-4">
           All of our code is on our <a href="https://github.com/cornellrocketryteam/Active-Cooling">GitHub repository</a>.
