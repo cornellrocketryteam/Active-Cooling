@@ -109,6 +109,11 @@
         <p>The fans are given power from an external 12 V DC power supply, and are driven by 5V logic level PWM signals. Although the datasheet stated that any signal above 2.8V could actuate the fans, through testing, we realized that a 3.3V PWM signal was too close to the threshold and could not actuate the fans. Since the logic-level output for a Pico is 3V3, we need to level-shift this output. For this, we utilized a 74AHCT125 level shifter/inverter, connecting a 5V DC outlet to the level shifter, 3V3 and GND from the Pico, as well as the PWM signals. This gave us the correct operating conditions. 
         </p>
         <p>To actuate the fans using the Pico, we utilized an interrupt handler, similar to what we did in Lab 3. Here, we utilized a global interrupt handler for both PWM pins, setting flags for each PWM pin. These flags are taken as conditionals in our main protothread, <code>protothread_temp</code> , which is checked after polling for temperature data. </p>
+      <p>Below is an image of our final hardware setup, with our three temperature sensors, level shifter and two fans, as well as the PicoW.</p>
+      <figure class="text-center">
+        <img src="img/hardware.png" width="400">
+        <figcaption class="text-muted mt-2">Final Hardware Setup</figcaption>
+      </figure>
       </section>
 
       <section id="software" class="section">
