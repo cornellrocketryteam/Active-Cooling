@@ -75,11 +75,27 @@
       <section id="introduction" class="section">
         <h2>Introduction</h2>
         
+        <p>
+          The Active Cooling System (ACS) is an electronics cooling system controlled by a closed-loop controller through an iOS app that enables users to monitor and set temperatures. 
+        </p>
+
+        <p>
+          We are members of the Cornell Rocketry Team, and part of our challenge is creating electrical systems that are able to withstand the environmental conditions of our launch sites. 
+          This summer, we are launching in Midland, Texas, and we will have a box full of our ground support electronics right beside the launch pad for a few hours, exposed to extreme heat. Electronics, especially the Raspberry Pi 5 that acts as the computer for our ground support equipment, are particularly sensitive to high heat and can sometimes behave unexpectedly as a result. 
+          We wanted to create an isolated system that could help maintain safe operating temperatures for our electronics, motivating us to develop the ACS. 
+        </p>
+
+        <p>
+          The ACS utilizes an iPhone, Pico W, BME280 Temperature Sensor, and PWM Fans. This project aims to be as modular and intuitive as possible. As such, it relies on an iOS app to enable user control of the fans. Users can set a desired temperature for each fan and monitor the actual temperature readings from each sensor through a live graphic. 
+          We created the hardware setup for these components on a breadboard, utilizing a typical DC outlet as our power source, such that it could easily fit into our existing ground support equipment architecture. We wrote a custom BME280 driver for the Pico to sample the sensor for temperature readings. Utilizing these temperature readings, 
+          we use a proportional gain controller to adjust the PWM output of the fans, adjusting to cool the electronics according to a set desired temperature. The ACS combines these components to adjust fan speeds in a closed-loop controller, enabling user control of electronics temperatures.
+        </p>
       </section>
 
       <section id="highlevel" class="section">
         <h2>High Level Design</h2>
 
+        
       </section>
 
       <section id="hardware" class="section">
