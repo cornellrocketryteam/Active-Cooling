@@ -292,7 +292,6 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		uint32_t parsed = strtoul(instance->pwm_1_value, &endptr, 10);
 
 		if (endptr == instance->pwm_1_value || *endptr != '\0' || parsed > UINT32_MAX) {
-			// printf("Invalid uint32_t for PWM 1: '%s'\n", instance->pwm_1_value);
 		} else {
 			printf("PARSED: %d\n", parsed);
 			external_pwm_1_callback(parsed);
@@ -308,7 +307,6 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		uint32_t parsed = strtoul(instance->pwm_2_value, &endptr, 10);
 
 		if (endptr == instance->pwm_2_value || *endptr != '\0' || parsed > UINT32_MAX) {
-			// printf("Invalid uint32_t for PWM 1: '%s'\n", instance->pwm_1_value);
 		} else {
 			external_pwm_2_callback(parsed);
 		}
@@ -323,14 +321,13 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		long val = strtol(instance->mode_value, &endptr, 10);
 
 		if (*endptr != '\0') {
-			// printf("Invalid string input: '%s'\n", instance->mode_value);
 		} else {
 			if (val == 0 || val == 1) {
 				external_mode_callback(val);
 			}
 		}
 	}
-
+	//Write value directly to Kp characteristic
 	if (attribute_handle == service_object.Kp_handle) {
 		memcpy(instance->Kp_value, buffer, max_copy_len);
 		instance->Kp_value[max_copy_len] = '\0';
@@ -339,12 +336,11 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		float parsed = strtof(instance->Kp_value, &endptr);
 
 		if (endptr == instance->Kp_value || *endptr != '\0') {
-			// printf("Invalid float for Kp: '%s'\n", instance->Kp_value);
 		} else {
 			external_kp_callback(parsed);
 		}
 	}
-
+	//Write value directly to desired temperature characteristic
 	if (attribute_handle == service_object.desired_temp_handle) {
 		memcpy(instance->desired_temp_value, buffer, max_copy_len);
 		instance->desired_temp_value[max_copy_len] = '\0';
@@ -353,9 +349,8 @@ static int custom_service_write_callback(hci_con_handle_t con_handle, uint16_t a
 		float parsed = strtof(instance->desired_temp_value, &endptr);
 
 		if (endptr == instance->desired_temp_value || *endptr != '\0') {
-			// printf("Invalid float for Kp: '%s'\n", instance->Kp_value);
+			
 		} else {
-			// printf("CALLED EXTERNAL TEMP CALLBACK\n");
 			external_desired_temp_callback(parsed);
 		}
 	}
@@ -586,7 +581,7 @@ void set_Kp_value(float * value){
 		att_server_register_can_send_now_callback(&instance->callback_Kp, instance->con_handle);
 	}
 }
-
+// Set all characteristics
 void set_All(float * temp_1, float * temp_2, float * temp_3, int32_t * pwm_1, int32_t * pwm_2, float * Kp, bool * mode) {
 	set_temp_1_value(temp_1);
 	set_temp_2_value(temp_2);

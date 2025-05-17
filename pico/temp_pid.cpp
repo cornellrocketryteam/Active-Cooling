@@ -182,9 +182,9 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
             printf("Error: Sensor 3 failed to read temperature\n");
             useThree = false;
         }
-    // printf("Temperature: %.2f\n\n", temp_3_val);
         set_temp_3_value(&temp_3_val);
 
+        //Choose valid temperature sensor data to average
         float sum = 0;
         int count = 0;
 
@@ -211,27 +211,34 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
         if (count < 3) {
             useOne = useTwo = useThree = true;
         }
-
+        //Calculate average measured temperature
         measured_temp = sum / count;
+
+        //Calculate error from desired temperature 
         error = desired_temp - measured_temp;
-    // printf("Error: %f\n", error);
 
         if (update_PWM_1) {
       // Handle manual mode
             if (mode == 0) {
                 pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(manual_pwm_1));
                 set_pwm_1_value(&manual_pwm_1);
-            } else {
+            } 
+            //Handle controller mode
+            else {
+                //Update PWM 1
                 if (control != old_control) {
                     old_control = control;
                     pwm_set_chan_level(slice_num_1, PWM_CHAN_B, (uint16_t)(control));
                 }
+                //calculate controller value 
                 control = (int32_t)(proportional_gain * error);
+                //check if calculated controller value is above limits
                 if (control < 0) {
                     control = 0;
                 } else if (control > 1500) {
                     control = 1500;
                 }
+                //set PWM value from the controller
                 set_pwm_1_value(&control);
             }
             update_PWM_1 = false;
@@ -239,23 +246,30 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
         if (update_PWM_2) {
       // Handle manual mode
             if (mode == 0) {
-        // printf("MANUAL PWM = %d\n", manual_pwm_2);
                 pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(manual_pwm_2));
                 set_pwm_2_value(&manual_pwm_2);
-            } else {
+            
+            }
+            //Handle controller modew 
+            else {
+                //update PWM 2
                 if (control != old_control) {
                     old_control = control;
                     pwm_set_chan_level(slice_num_2, PWM_CHAN_A, (uint16_t)(control));
                 }
+                //calculate new control value
                 control = (int32_t)(proportional_gain * error);
-        // printf("Control: %i\n",control_1);
+                //Check if the control is over specified max and min
                 if (control < 0) {
                     control = 0;
-                } else if (control > 1500) {
+                } 
+                else if (control > 1500) {
                     control = 1500;
                 }
+                //Set PWM value from controller
                 set_pwm_2_value(&control);
             }
+            //re-initialize PWM update
             update_PWM_2 = false;
         }
         prev_error = error;
@@ -269,6 +283,7 @@ int main() {
     stdio_init_all();
 
     sleep_ms(5000);
+//  Initialize bluetooth
     if (cyw43_arch_init()) {
         printf("Bluetooth init failed \n");
         return -1;
@@ -279,6 +294,7 @@ int main() {
 
     att_server_init(profile_data, NULL, NULL);
 
+    //Initialize bluetooth service with characteristics
     custom_service_server_init(
         temp_1_bytes, temp_2_bytes, temp_3_bytes, pwm_1_bytes,
         update_pwm_1_callback, pwm_2_bytes, update_pwm_2_callback, kp_bytes,
@@ -286,7 +302,9 @@ int main() {
         update_desired_temp_callback
     );
 
+    //register bluetooth callback functions
     hci_event_callback_registration.callback = &packet_handler;
+    //add bluetooth event handler
     hci_add_event_handler(&hci_event_callback_registration);
 
     att_server_register_packet_handler(packet_handler);
@@ -324,14 +342,15 @@ int main() {
     gpio_pull_up(I2C1_SCL);
     gpio_pull_up(I2C1_SDA);
 
+    //Initialize temperature sensor 1
     if (!sensor_1.begin()) {
         printf("Error: Sensor 1 failed to initialize\n");
     }
-
+    //Initialize temperature sensor 2
     if (!sensor_2.begin(0x77)) {
         printf("Error: Sensor 2 failed to initialize\n");
     }
-
+    //Initializae temperatuer sensor 3
     if (!sensor_3.begin()) {
         printf("Error: Sensor 3 failed to initialize\n");
     }
@@ -369,6 +388,7 @@ int main() {
     pwm_set_mask_enabled((1u << slice_num_1));
     pwm_set_mask_enabled((1u << slice_num_2));
 
+    //start main protothread
     pt_add_thread(protothread_temp);
     pt_schedule_start;
 }
