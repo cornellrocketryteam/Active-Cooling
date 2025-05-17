@@ -107,14 +107,27 @@
              PWM signals into high and low signals with an optoisolator and MOSFET like we did in Lab 3. We also use a power supply that connects to a typical outlet, as our Fill Station box uses a power strip connected to a portable battery. The hardware lives on a breadboard, connecting the Pico W to three temperature sensors using I2C and two PWM fans.
           </p>
 
+         <div class="d-flex justify-content-center gap-5">
+          <figure class="text-center">
+            <img src="img/app_thermal.png" width="200">
+            <figcaption class="text-muted mt-2">Thermal tab</figcaption>
+          </figure>
+
+          <figure class="text-center">
+            <img src="img/app_fans.png" width="200">
+            <figcaption class="text-muted mt-2">Fans tab</figcaption>
+          </figure>
+        </div>
+
           <p>
-            The iOS app enables two modes of operation: manual and controller. In manual mode, the user can directly set an inverted PWM control signal for the fans to set each fan to whatever fan speed they would like. In controller mode, the user sets a desired temperature, and the closed-loop controller will constantly read actual temperature sensor readings to adjust the fan speed 
+            The iOS app enables users to view temperature readings as well as the speeds of the fans, separated into two tabs. In the "Thermal" tab, you can see both a visual layout of the temperature sensors in the fill station box, as well as charts showing the 1 minute history of each temperature sensor. The "Fans" tab also consists of charts showing the 1 minute history of the fans' PWM values, and allows you to switch between
+            the two modes of operation: manual and controller. In manual mode, the user can directly set an inverted PWM control signal for the fans to set each fan to whatever fan speed they would like. In controller mode, the user sets a desired temperature, and the closed-loop controller will constantly read actual temperature sensor readings to adjust the fan speed 
             accordingly such that the desired temperature is reached.
           </p>
 
           <p>
             The closed-loop controller is a proportional (P) controller. We chose not to include integrative (I) and derivative (D) control because we are aiming to adjust fan speed to reach the desired temperature as closely as possible, but oscillations near that temperature due to steady state error do not affect the performance in a significant enough way to require the additional 
-            control from I and D gains. The user is able to adjust the P gain value from within the iOS app.
+            control from I and D gains. The user is able to adjust the P gain value from within the app in controller mode.
           </p>
 
           <p>
