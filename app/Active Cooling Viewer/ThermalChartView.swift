@@ -12,10 +12,13 @@ class ThermalChartDataModel: ObservableObject {
     @Published var data: [(time: Date, value: Float)] = []
 
     func append(_ value: Float) {
+        // Clamp the chart to reasonable values
         guard value > 0 && value < 60 else { return }
         
         let now = Date()
         data.append((now, value))
+        
+        // Set the chart to display the last minute of data
         data = data.filter { $0.time > now.addingTimeInterval(-60) }
     }
 }

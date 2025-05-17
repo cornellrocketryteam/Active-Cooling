@@ -46,7 +46,6 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     func startScan() {
-        print("Scanning...")
         centralManager?.scanForPeripherals(withServices: [BLE_Service_UUID], options: [CBCentralManagerScanOptionAllowDuplicatesKey:false])
     }
     
@@ -93,8 +92,6 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         
     // Called when the central manager disconnects from the peripheral
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        
-        print("Peripheral disconnected")
         startScan()
     }
     
@@ -114,10 +111,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         print("Discovered Services: \(services)")
 
         for service in services {
-            // If service's UUID matches with our specified one...
             if service.uuid == BLE_Service_UUID {
-                print("BLE service found")
-                
                 // Search for the characteristics of the service
                 peripheral.discoverCharacteristics(nil, for: service)
             }
@@ -138,14 +132,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             return
         }
         
-        // Print to console for debugging purposes
-        print("Found \(characteristics.count) characteristics!")
-        
-        for characteristic in characteristics {
-            print("Characteristic \(characteristic.uuid) properties: \(characteristic.properties)")
-        }
-        
-        // For every characteristic found...
+        // Handle all valid characteristics
         for characteristic in characteristics {
             switch characteristic.uuid {
             case Fan1_Char_UUID:
@@ -170,7 +157,7 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
             case DesiredTemp_Char_UUID:
                 desiredTempChar = characteristic
             default:
-                print("Unknown characteristic: \(characteristic.uuid)")
+                print("Error: Unknown characteristic: \(characteristic.uuid)")
             }
         }
 
@@ -183,8 +170,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         guard let value = characteristic.value else { return }
         
         let stringValue = String(decoding: value, as: UTF8.self)
-        print("Characteristic uuid: \(characteristic.uuid), value: \(stringValue)")
         
+        // Notify the relevant view controller when new values are received
         switch characteristic.uuid {
         case Fan1_Char_UUID:
             NotificationCenter.default.post(name: .fan1DidUpdate, object: stringValue)
@@ -197,12 +184,11 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         case Temp3_Char_UUID:
             NotificationCenter.default.post(name: .temp3DidUpdate, object: stringValue)
         default:
-            print("Unhandled characteristic: \(characteristic.uuid)")
+            print("Error: Unhandled characteristic: \(characteristic.uuid)")
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        print("*******************************************************")
 
         // Check if subscription was successful
         if (error != nil) {
@@ -227,8 +213,6 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
         } else {
             print("Message sent successfully to \(characteristic.uuid)")
         }
-        
-        print("Message sent")
     }
 
     // Called when descriptors for a characteristic are found

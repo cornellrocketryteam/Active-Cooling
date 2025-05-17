@@ -45,6 +45,7 @@ class FansViewController: UIViewController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let sheetVC: UIViewController
         
+        // Show the controller settings page if in controller mode, else show the manual settings page
         if modeSwitch.isOn {
             sheetVC = storyboard.instantiateViewController(withIdentifier: "ControllerSettingsSheet")
             sheetVC.modalPresentationStyle = .pageSheet
@@ -75,7 +76,7 @@ class FansViewController: UIViewController {
         present(sheetVC, animated: true)
     }
     
-    
+    // Handle new fan 1 readings sent over Bluetooth
     @objc func updateFan1(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }
@@ -85,6 +86,7 @@ class FansViewController: UIViewController {
         tableView.reloadData()
     }
     
+    // Handle new fan 2 readings sent over Bluetooth
     @objc func updateFan2(_ notification: Notification) {
         guard let str = notification.object as? String,
               let pwm = Int32(str) else { return }

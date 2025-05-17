@@ -20,6 +20,7 @@ class SheetManualViewController: UIViewController {
     }
     
     @IBAction func sendButtonTapped(_ sender: Any) {
+        // Only update fields that have text in them
         if let fan1Text = fan1TextField.text, !fan1Text.isEmpty {
             BluetoothManager.shared.write(to: BluetoothManager.shared.fan1Char, value: fan1Text)
         }
@@ -27,6 +28,7 @@ class SheetManualViewController: UIViewController {
             BluetoothManager.shared.write(to: BluetoothManager.shared.fan2Char, value: fan2Text)
         }
         
+        // Dismiss the sheet after send
         self.dismiss(animated: true, completion: nil)
     }
 }
