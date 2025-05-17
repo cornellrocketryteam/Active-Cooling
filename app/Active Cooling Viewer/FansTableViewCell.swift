@@ -29,6 +29,7 @@ class FansTableViewCell: UITableViewCell {
         backgroundColor = .clear
     }
     
+    // Update the chart with new values
     func update(model: FansChartDataModel, pwm: Int32) {
         currentValueLabel.text = String(pwm)
 
@@ -42,6 +43,7 @@ class FansTableViewCell: UITableViewCell {
             hosting.view.translatesAutoresizingMaskIntoConstraints = false
             chartContainerView.addSubview(hosting.view)
 
+            // Constrain the chart to a fixed size
             NSLayoutConstraint.activate([
                 hosting.view.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
                 hosting.view.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),

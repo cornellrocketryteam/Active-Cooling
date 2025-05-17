@@ -45,6 +45,7 @@ class ThermalViewController: UIViewController {
         setupSettingsMenu()
     }
     
+    // Handle new temperature readings sent over Bluetooth
     @objc func updateTemp(_ notification: Notification) {
         guard let str = notification.object as? String,
               let temp = Float(str) else { return }
