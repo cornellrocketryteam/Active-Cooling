@@ -196,7 +196,33 @@
 
       <section id="results" class="section">
         <h2>Results</h2>
-
+        <h5>Fan Actuation Testing</h5>
+        <p>In order to initially verify that the fans were receiving the correct PWM values, we utilized an oscilloscope to probe the PWM output pins, Fan1 and Fan2, which were GP27 and GP26, respectively. Below is a scope image of PWM value 1000, directly from the Pico side. </p>
+        <figure class="text-center">
+          <img src="img/1000_3v3.jpg"width="400">
+          <figcaption class="text-muted mt-2">PWM Output: 1000, From Pico</figcaption>
+        </figure>
+        <p>We also wanted to ensure that the PWM signal is properly being propagated across the level shifter. Here is the same PWM value of 1000, but on the other side of the level shifter. Here, we deemed that our level shifter worked as intended since the signal looked as if it had the inverted duty cycle as the 3V3 signal, since our level shifter was also an inverter.</p>
+        <figure class="text-center">
+          <img src="img/1000_5V.jpg"width="400">
+          <figcaption class="text-muted mt-2">PWM Output: 1000, Through Level Shifter</figcaption>
+        </figure>
+        <p>Additionally, we wanted to test that the fan received different PWM values, so below is a scope image of the PWM value of 2000. This verified that the different PWM signals propagated across the level shifter correctly, since the PWM output was significantly less, where the fan received the correct signal. </p>
+        <figure class="text-center">
+          <img src="img/2000_5.jpg"width="400">
+          <figcaption class="text-muted mt-2">PWM Output: 2000, Through Level Shifter</figcaption>
+        </figure>
+        <p>Initially, we believed our fans were able to run off of a 5V DC supply, but when testing our PWM, we noticed that the fan speed did not change as drastically as we expected. After careful reading of the datasheet, we found that this fan required a 12V supply. After changing the power supply, we saw the fans respond as expected, with visibly varying speeds as we changed the PWM signal.</p>
+        <h5>Execution</h5>
+        <p>We wanted to minimize the amount of power dissipated by our system, so in order to do so, we decided to deprioritize the speed at which we sampled the sensor data. For the current fill station architecture, we have a limited power budget, and this is not a flight-critical system. However, we implemented threads for our main polling loop, in order to create a baseline for concurrency in the future. 
+        </p>
+        <h5>Accuracy</h5>
+        <p>Our accuracy was measured by a comparison of PWM data, as mentioned in the first few paragraphs of this section. We expected an inverted relationship between the PWM signal sent and the fan speed, and our observations correlated with our expectations. This is due to the fact that our level shifter is also an inverter. </p>
+        <h5>Safety</h5>
+        <p>In order to ensure safety, in terms of the program crashing, we implemented a choosing algorithm for our sensor data. If all sensor reads are valid, we utilize an average of the three sensor readings. However, if one or two of the sensor readings are invalid, we utilize an average of the valid readings. This allows our controller to be functional as long as we have at least one valid sensor reading. </p>
+        <h5>Usability</h5>
+        <p>Usability was an important consideration in our design, which is why we chose our interface to be an iOS app which anyone with an iPhone could download and use. The app strives to follow Apple’s human interface guidelines, so it would be familiar to anyone who has used iOS apps in the past.
+        </p>
       </section>
 
       <section id="conclusions" class="section">
@@ -239,6 +265,11 @@
         <p>
           Here is the datasheet for the logic level shifter, the <a href="https://cdn-shop.adafruit.com/product-files/1787/1787AHC125.pdf">74AHCT125 </a>. 
         </p>
+        <p>
+          Here is the datasheet for our <a href="https://www.delta-fan.com/Download/Spec/AUC0512DB-AF00.pdf">PWM Fan</a>.
+        </p>
+        <p>Here is the datasheet for our <a href="https://cdn-learn.adafruit.com/assets/assets/000/115/588/original/bst-bme280-ds002.pdf?1664822559">BME280 Sensor</a>.</p>
+        <p>Here is the link for our <a href="https://www.adafruit.com/product/3538">Thermal Camera</a>. </p>
       </section>
     </div>
   </div>
