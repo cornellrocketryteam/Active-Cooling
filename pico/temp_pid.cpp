@@ -166,7 +166,6 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
             printf("Error: Sensor 1 failed to read temperature\n");
             useOne = false;
         }
-    // printf("Temperature: %.2f\n\n", temp_1_val);
         set_temp_1_value(&temp_1_val);
 
     // Temp sensor 2
@@ -174,7 +173,6 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
             printf("Error: Sensor 2 failed to read temperature\n");
             useTwo = false;
         }
-    // printf("Temperature: %.2f\n\n", temp_2_val);
         set_temp_2_value(&temp_2_val);
 
     // Temp Sensor 3
