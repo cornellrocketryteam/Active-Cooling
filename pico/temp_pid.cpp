@@ -27,8 +27,10 @@
 // Include custom libraries
 #include "pt_cornell_rp2040_v1_3.h"
 
-// Add driver for temp sensor library here
+//Driver for temp sensor library
 #include "../lib/BME280-Pico/bme280.hpp"
+
+//Tiny USB header and associated file imports
 #include "tusb.h"
 #include <cstdio>
 
@@ -47,13 +49,9 @@
 #include "GAP_Advertisement/gap_config.h"
 #include "GATTService/service_implementation.h"
 
-float proportional_gain = 100;
-float desired_temp = 25;
-float measured_temp;
+
 
 // PWM wrap value and clock divide value
-// For a CPU rate of 125 MHz, this gives
-// a PWM frequency of 1 kHz.
 #define WRAPVAL 10000
 #define CLKDIV 50.0f
 
@@ -89,9 +87,10 @@ volatile bool update_PWM_2;
 int32_t manual_pwm_1 = 101;
 int32_t manual_pwm_2 = 101;
 
-// PID + Intermediary variables
-float dt = 0.001;
-
+// P Controller + Intermediary variables
+float proportional_gain = 100;
+float desired_temp = 25;
+float measured_temp;
 float error;
 float prev_error;
 
@@ -114,16 +113,20 @@ char mode_bytes[64];
 char desired_temp_bytes[64];
 bool received_first = false;
 
+//Update PWM 1 callback - From App 
 void update_pwm_1_callback(uint32_t new_pwm) {
     manual_pwm_1 = new_pwm;
 }
 
+//Update PWM 2 callback - From App
 void update_pwm_2_callback(uint32_t new_pwm) {
     manual_pwm_2 = new_pwm;
 }
 
+//Update Kp callback - From App
 void update_kp_callback(float new_kp) { proportional_gain = new_kp; }
 
+//Update Mode callback - From App
 void update_mode_callback(uint8_t new_mode) {
     if (new_mode == 0) {
         mode = manual;
@@ -134,6 +137,7 @@ void update_mode_callback(uint8_t new_mode) {
     }
 }
 
+//Update Desired Temperature Callback - From App
 void update_desired_temp_callback(float new_temp) {
     desired_temp = new_temp;
 }
@@ -141,12 +145,19 @@ void update_desired_temp_callback(float new_temp) {
 // PWM interrupt service routine
 void on_pwm_wrap() {
     uint32_t status = pwm_get_irq_status_mask();
+
+    //If interrupt is on PWM1 Pin
     if (status & (1 << slice_num_1)) {
+        //clear interrupt handler 
         pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_1));
+        //update PWM1 flag for main thread
         update_PWM_1 = true;
     }
+    //If interrupt is on PWM2 pin
     if (status & (1 << slice_num_2)) {
+        //clear interrupt handler
         pwm_clear_irq(pwm_gpio_to_slice_num(PWM_OUT_2));
+        //update PWM2 flag for main thread
         update_PWM_2 = true;
     }
 }
@@ -161,18 +172,20 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
     bool useTwo = true;
     bool useThree = true;
     while (1) {
-    // Temp sensor 1
+    // Read Temp sensor 1
         if (!sensor_1.read_temperature(&temp_1_val)) {
             printf("Error: Sensor 1 failed to read temperature\n");
             useOne = false;
         }
+        //set temperature 1 value in the app
         set_temp_1_value(&temp_1_val);
 
-    // Temp sensor 2
+    // Read Temp sensor 2
         if (!sensor_2.read_temperature(&temp_2_val)) {
             printf("Error: Sensor 2 failed to read temperature\n");
             useTwo = false;
         }
+        //set temperature 2 value in the app
         set_temp_2_value(&temp_2_val);
 
     // Temp Sensor 3
@@ -180,9 +193,10 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
             printf("Error: Sensor 3 failed to read temperature\n");
             useThree = false;
         }
+        //set temperature 3 value in the app
         set_temp_3_value(&temp_3_val);
 
-        //Choose valid temperature sensor data to average
+        //Choose valid temperature sensor data to average for measured_temp
         float sum = 0;
         int count = 0;
 
@@ -270,6 +284,7 @@ static PT_THREAD(protothread_temp(struct pt *pt)) {
             //re-initialize PWM update
             update_PWM_2 = false;
         }
+        //update previous error
         prev_error = error;
     }
     PT_END(pt);
@@ -281,7 +296,7 @@ int main() {
     stdio_init_all();
 
     sleep_ms(5000);
-//  Initialize bluetooth
+  // Initialize bluetooth
     if (cyw43_arch_init()) {
         printf("Bluetooth init failed \n");
         return -1;
@@ -302,14 +317,17 @@ int main() {
 
     //register bluetooth callback functions
     hci_event_callback_registration.callback = &packet_handler;
+
     //add bluetooth event handler
     hci_add_event_handler(&hci_event_callback_registration);
 
+    //register bluetooth packet handler
     att_server_register_packet_handler(packet_handler);
 
     hci_power_control(HCI_POWER_ON);
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
+    //initial, temporary values for characteristic initialization
     float temp_1_val = 25.0;
     float temp_2_val = 25.0;
     float temp_3_val = 25.0;
@@ -328,15 +346,21 @@ int main() {
     ////////////////////////////////////////////////////////////////////////
     ///////////////////////// I2C CONFIGURATION ////////////////////////////
     
+    //Initialize I2C0 channel and pins
     i2c_init(I2C_CHAN_0, 400 * 1000);
     gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C);
     gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C);
+
+    //Enable pull-up resistors on I2C0
     gpio_pull_up(I2C0_SDA);
     gpio_pull_up(I2C0_SCL);
 
+    //Initialize I2C1 channel and pins 
     i2c_init(I2C_CHAN_1, 400 * 1000);
     gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
     gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C);
+
+    //Enable pull-up resistors on I2C1
     gpio_pull_up(I2C1_SCL);
     gpio_pull_up(I2C1_SDA);
 
@@ -354,15 +378,17 @@ int main() {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    /////////////////////////// PWM CONFIGURATION
-    //////////////////////////////
+    /////////////////////////// PWM CONFIGURATION //////////////////////////////
     //////////////////////////////////////////////////////////////////////////
+
     // Tell GPIO PWM_OUT that it is allocated to the PWM
     gpio_set_function(PWM_OUT_1, GPIO_FUNC_PWM);
     gpio_set_function(PWM_OUT_2, GPIO_FUNC_PWM);
+
     // Find out which PWM slice is connected to GPIO PWM_OUT (it's slice 2)
     slice_num_1 = pwm_gpio_to_slice_num(PWM_OUT_1);
     slice_num_2 = pwm_gpio_to_slice_num(PWM_OUT_2);
+
     // Mask our slice's IRQ output into the PWM block's single interrupt line,
     // and register our interrupt handler
     pwm_clear_irq(slice_num_1);
@@ -371,6 +397,7 @@ int main() {
     pwm_set_irq_enabled(slice_num_2, true);
     irq_set_exclusive_handler(PWM_IRQ_WRAP, on_pwm_wrap);
     irq_set_enabled(PWM_IRQ_WRAP, true);
+
     // This section configures the period of the PWM signals
     pwm_set_wrap(slice_num_1, WRAPVAL);
     pwm_set_wrap(slice_num_2, WRAPVAL);
@@ -379,9 +406,11 @@ int main() {
 
     pwm_set_output_polarity(slice_num_1, 1, 1);
     pwm_set_output_polarity(slice_num_2, 1, 1);
+
     // This sets duty cycle
     pwm_set_chan_level(slice_num_1, PWM_CHAN_B, 3125);
     pwm_set_chan_level(slice_num_2, PWM_CHAN_A, 3125);
+
     // Start the channel
     pwm_set_mask_enabled((1u << slice_num_1));
     pwm_set_mask_enabled((1u << slice_num_2));
