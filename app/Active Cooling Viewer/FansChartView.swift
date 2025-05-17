@@ -14,6 +14,8 @@ class FansChartDataModel: ObservableObject {
     func append(_ value: Int32) {
         let now = Date()
         data.append((now, value))
+        
+        // Set the chart to display the last minute of data
         data = data.filter { $0.time > now.addingTimeInterval(-60) }
     }
 }

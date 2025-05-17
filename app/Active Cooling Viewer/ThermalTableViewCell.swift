@@ -28,6 +28,7 @@ class ThermalTableViewCell: UITableViewCell {
         backgroundColor = .clear
     }
     
+    // Update the chart with new values
     func update(model: ThermalChartDataModel, temperature: Float, unit: String) {
         currentValueLabel.attributedText = formattedTemperatureString(temperature, unit: unit)
 
@@ -39,7 +40,8 @@ class ThermalTableViewCell: UITableViewCell {
             let hosting = UIHostingController(rootView: chartView)
             hosting.view.translatesAutoresizingMaskIntoConstraints = false
             chartContainerView.addSubview(hosting.view)
-
+            
+            // Constrain the chart to a fixed size
             NSLayoutConstraint.activate([
                 hosting.view.topAnchor.constraint(equalTo: chartContainerView.topAnchor),
                 hosting.view.leadingAnchor.constraint(equalTo: chartContainerView.leadingAnchor),
@@ -56,6 +58,7 @@ class ThermalTableViewCell: UITableViewCell {
         contentView.frame = contentView.frame.inset(by: UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0))
     }
     
+    // Format the temperature display nicely
     func formattedTemperatureString(_ value: Float, unit: String) -> NSAttributedString {
         let fullString = String(format: "%.1f %@", value, unit)
         let attributed = NSMutableAttributedString(string: fullString)
