@@ -95,6 +95,47 @@
       <section id="highlevel" class="section">
         <h2>High Level Design</h2>
 
+        <h5 class="mt-5 mb-2">Rationale</h5>
+          <p>
+            This year, the Cornell Rocketry Team is launching our first-ever hybrid-powered rocket, which means our propulsion system consists of liquid oxidizer and solid propellant. This means that we require robust ground support equipment (GSE) right beside our rocket at the launchpad to remotely control fill operations of the tank on our rocket that holds the liquid oxidizer. 
+            The GSE includes what we call the Fill Station, which contains a large box of electronics that routes signals sent from our control software to the relevant hardware, such that we can read sensor data and control valves in real-time. This box is subject to the environmental conditions of our launch sites. Our competition this summer is in an extremely hot desert in Midland, Texas, 
+            so we needed a method for cooling these Fill Station electronics in an isolated, modular system that would easily fit into our electronics box and would not require human interaction, since we cannot open the box once we set up all our hardware connections. 
+          </p>
+        <h5 class="mt-5 mb-2">Structure</h5>
+          <p>
+            Due to the need for a modular, independent cooling system, we opted for a design that relies on a closed-loop controller, communicates over Bluetooth, and utilizes the power source already existing in our Fill Station electronics box. As such, we aimed to minimize physical components as much as possible, so we chose fans that accept PWM signals so that we did not have to convert
+             PWM signals into high and low signals with an optoisolator and MOSFET like we did in Lab 3. We also use a power supply that connects to a typical outlet, as our Fill Station box uses a power strip connected to a portable battery. The hardware lives on a breadboard, connecting the Pico W to three temperature sensors using I2C and two PWM fans.
+          </p>
+
+          <p>
+            The iOS app enables two modes of operation: manual and controller. In manual mode, the user can directly set an inverted PWM control signal for the fans to set each fan to whatever fan speed they would like. In controller mode, the user sets a desired temperature, and the closed-loop controller will constantly read actual temperature sensor readings to adjust the fan speed 
+            accordingly such that the desired temperature is reached.
+          </p>
+
+          <p>
+            The closed-loop controller is a proportional (P) controller. We chose not to include integrative (I) and derivative (D) control because we are aiming to adjust fan speed to reach the desired temperature as closely as possible, but oscillations near that temperature due to steady state error do not affect the performance in a significant enough way to require the additional 
+            control from I and D gains. The user is able to adjust the P gain value from within the iOS app.
+          </p>
+
+          <p>
+            The software is implemented using two IRQs to handle PWM control signal updates in each fan and a protothread to continuously collect temperature data samples from all three sensors and execute the P controller in the background. The IRQs are in charge of setting flags that signal when PWM signals can be updated. In the protothread, each temperature sensor is polled for new data. 
+            If any sensor returns an invalid status, that sensor is disregarded. All valid sensors are averaged, and this reading is used as the temperature reading for the Fill Station box. Then, based on the flags set by the IRQ handler, if the PWM for a fan is able to be updated, the mode that the fan is in is checked. If the fan is in manual mode, the PWM control signal is set based on 
+            the received Bluetooth packet. If the fan is in controller mode, the PWM control signal is set by calculating the error between the averaged temperature value and the desired temperature received from the Bluetooth packet and multiplying this by the P gain value, also received via Bluetooth.
+          </p>
+
+        <h5 class="mt-5 mb-2">Hardware/Software Tradeoffs</h5>
+
+        <p>
+          The main tradeoff we ran into was with the PWM fans we chose for our project. We chose a fan that accepts PWM signals to simplify the number of hardware components we needed, as this ensured that our physical breadboard setup was minimal and had less room for wiring issues. However, we had some difficulty finding fans that took PWM signals, especially since we were hoping to find a 
+          fan that could take 3.3V logic-level signals. Through testing, we found out that the one we chose actually needed a 5V logic level despite the datasheet suggesting it could work with 3.3V, so we added a logic level shifter to our breadboard. The software tradeoff with this PWM fan, we found through testing, was that when powered, this PWM fan cannot completely stop spinning. This 
+          means that if our desired temperature is above the current temperature, and we send a PWM signal that would correspond to a fan speed below the fan speed that the PWM fan sets to on power, then the fan cannot decrease its fan speed. In the future, we would hope to select a fan that has the ability to decrease fan speed all the way to zero. 
+        </p>
+
+        <h5 class="mt-5 mb-2">Patents/Copyrights/Trademarks</h5>
+
+        <p>
+          There are no existing patents, copyrights, or trademarks relevant to our project. All software we referenced and utilized are under open source licenses.
+        </p>
         
       </section>
 
