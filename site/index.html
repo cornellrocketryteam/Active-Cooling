@@ -76,13 +76,8 @@
         <p>
           We are members of the Cornell Rocketry Team, and part of our challenge is creating electrical systems that are able to withstand the environmental conditions of our launch sites. 
           This summer, we are launching in Midland, Texas, and we will have a box full of our ground support electronics right beside the launch pad for a few hours, exposed to extreme heat. Electronics, especially the Raspberry Pi 5 that acts as the computer for our ground support equipment, are particularly sensitive to high heat and can sometimes behave unexpectedly as a result. 
-          We wanted to create an isolated system that could help maintain safe operating temperatures for our electronics, motivating us to develop the ACS. Below is an image of our Fill Station Electronics.
-        </p>
-          <figure class="text-center">
-            <img src="img/FillStation_Field.jpg" width="200">
-            <figcaption class="text-muted mt-2">Fill station electronics in the field</figcaption>
-          </figure>
-        <p>
+          We wanted to create an isolated system that could help maintain safe operating temperatures for our electronics, motivating us to develop the ACS.
+     
           The ACS utilizes an iPhone, Pico W, BME280 Temperature Sensor, and PWM Fans. This project aims to be as modular and intuitive as possible. As such, it relies on an iOS app to enable user control of the fans. Users can set a desired temperature for each fan and monitor the actual temperature readings from each sensor through a live graphic. 
           We created the hardware setup for these components on a breadboard, utilizing a typical DC outlet as our power source, such that it could easily fit into our existing ground support equipment architecture. We wrote a custom BME280 driver for the Pico to sample the sensor for temperature readings. Utilizing these temperature readings, 
           we use a proportional gain controller to adjust the PWM output of the fans, adjusting to cool the electronics according to a set desired temperature. The ACS combines these components to adjust fan speeds in a closed-loop controller, enabling user control of electronics temperatures.
@@ -96,8 +91,14 @@
           <p>
             This year, the Cornell Rocketry Team is launching our first-ever hybrid-powered rocket, which means our propulsion system consists of liquid oxidizer and solid propellant. This means that we require robust ground support equipment (GSE) right beside our rocket at the launchpad to remotely control fill operations of the tank on our rocket that holds the liquid oxidizer. 
             The GSE includes what we call the Fill Station, which contains a large box of electronics that routes signals sent from our control software to the relevant hardware, such that we can read sensor data and control valves in real-time. This box is subject to the environmental conditions of our launch sites. Our competition this summer is in an extremely hot desert in Midland, Texas, 
-            so we needed a method for cooling these Fill Station electronics in an isolated, modular system that would easily fit into our electronics box and would not require human interaction, since we cannot open the box once we set up all our hardware connections. 
+            so we needed a method for cooling these Fill Station electronics in an isolated, modular system that would easily fit into our electronics box and would not require human interaction, since we cannot open the box once we set up all our hardware connections. Below is an image of our Fill Station Electronics.
           </p>
+        </p>
+        <figure class="text-center">
+          <img src="img/FillStation_Field.jpg" width="200">
+          <figcaption class="text-muted mt-2">Fill station electronics in the field</figcaption>
+        </figure>
+      <p>
         <h5 class="mt-5 mb-2">Structure</h5>
           <p>
             Due to the need for a modular, independent cooling system, we opted for a design that relies on a closed-loop controller, communicates over Bluetooth, and utilizes the power source already existing in our Fill Station electronics box. As such, we aimed to minimize physical components as much as possible, so we chose fans that accept PWM signals so that we did not have to convert
